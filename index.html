@@ -182,12 +182,17 @@
     .fc .fc-timegrid-slot, .fc .fc-timegrid-axis, .fc .fc-daygrid-day-frame{
       background:transparent !important;
     }
-    /* イベント枠のボーダーを完全に消す */
-    .fc .fc-event,
-    .fc .fc-event-main,
-    .fc .fc-event-selected {
-      border-color: transparent !important;
-    }
+    /* イベント枠のボーダーを完全に消す（全状態対応） */
+.fc .fc-event,
+.fc .fc-event-main,
+.fc .fc-event-selected,
+.fc .fc-event:hover,
+.fc .fc-event.fc-event-selected,
+.fc .fc-event.fc-event-dragging {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 
     /* カスタム設定ボタン（ツールバー） */
     .fc .fc-settings-button{
