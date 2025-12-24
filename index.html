@@ -14,101 +14,61 @@
   <style>
     :root{
       --bg:#0b0f14; --panel:#111827; --panel2:#0f172a; --text:#e5e7eb;
-      --muted:#94a3b8; --border:#1f2937; --btn:#1f2937; --btn2:#0b1220;
+      --muted:#94a3b8; --border:#1f2937; --btn:#1f2937;
       --ok:#10b981; --bad:#ef4444;
     }
     html,body{height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text);}
     .wrap{display:grid; grid-template-columns: 360px 1fr; height:100vh;}
+    .wrap.hide-settings{grid-template-columns: 1fr;}
     .side{
       border-right:1px solid var(--border);
       background:linear-gradient(180deg,var(--panel),var(--panel2));
-      padding:14px;
-      overflow:auto;
+      padding:14px; overflow:auto;
     }
+    .side.hidden{display:none;}
     .main{padding:10px;}
     #calendar{height: calc(100vh - 20px); background:#fff; border-radius:14px; padding:10px; box-sizing:border-box;}
-    h1{font-size:16px; margin:0 0 10px; letter-spacing:.3px;}
+    h1{font-size:16px; margin:0 0 10px;}
     .small{font-size:12px; color:var(--muted);}
-    .card{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      margin:10px 0;
-      background:rgba(255,255,255,0.03);
-    }
+    .card{border:1px solid var(--border); border-radius:12px; padding:10px; margin:10px 0; background:rgba(255,255,255,0.03);}
     .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
     label{font-size:12px; color:var(--muted);}
     input[type="text"]{
-      width:100%;
-      background:#0b1220;
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:10px;
-      outline:none;
+      width:100%; background:#0b1220; border:1px solid var(--border);
+      color:var(--text); padding:8px 10px; border-radius:10px; outline:none;
     }
     input[type="color"]{width:44px; height:30px; border:none; background:transparent; padding:0;}
-    .btn{
-      background:var(--btn);
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:12px;
-    }
-    .btn:hover{filter:brightness(1.1);}
+    .btn{background:var(--btn); border:1px solid var(--border); color:var(--text);
+      padding:8px 10px; border-radius:10px; cursor:pointer; font-size:12px;}
     .btn.ok{border-color:#064e3b; background:rgba(16,185,129,.15);}
     .btn.bad{border-color:#7f1d1d; background:rgba(239,68,68,.12);}
     .list{display:flex; flex-direction:column; gap:10px;}
-    .item{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      background:rgba(0,0,0,0.15);
-    }
-    .itemTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
-    .id{font-size:12px; color:var(--text); word-break:break-all; line-height:1.2;}
-    .tag{font-size:11px; color:var(--muted);}
+    .item{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,0.15);}
+    .itemTop{display:flex; justify-content:space-between; gap:10px;}
+    .id{font-size:12px; word-break:break-all;}
     .checks{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
-    .checks label{display:flex; gap:6px; align-items:center; color:var(--text); font-size:12px;}
-    .checks input{transform: translateY(1px);}
+    .checks label{display:flex; gap:6px; align-items:center; font-size:12px;}
     .inline{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;}
-    .inline input[type="text"]{width:auto; flex:1; min-width:160px;}
     .hr{height:1px; background:var(--border); margin:10px 0;}
-    .note{font-size:12px; color:var(--muted); line-height:1.4;}
   </style>
 </head>
 
 <body>
 <div class="wrap">
   <aside class="side">
-    <h1>MyCalendar 設定</h1>
-    <div class="small">カレンダー追加 / 表示制御 / 色設定。設定はこのブラウザに保存。</div>
+    <button class="btn" id="btnToggleSettings" style="width:100%; margin-bottom:10px;">設定を開く</button>
+
+    <h1>設定</h1>
+    <div class="small">カレンダー追加・表示制御・色設定（保存されます）</div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div class="small">APIキーはコード内で設定（UIからは変更しない）</div>
-        <button class="btn" id="btnReload">再読み込み</button>
-      </div>
-      <div class="hr"></div>
-      <div class="note">
-        ※ 予定タイトルを“データとして隠す”ことはできない（画面上で消すだけ）。<br>
-        ※ 公開カレンダー前提。非公開を読むならOAuthが必要。
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row"><label>カレンダーID（gmail / @group.calendar.google.com）</label></div>
-      <input type="text" id="newCalId" placeholder="例: xxxx@group.calendar.google.com" />
+      <label>カレンダーID</label>
+      <input type="text" id="newCalId" placeholder="xxxx@group.calendar.google.com" />
       <div class="inline">
-        <div>
-          <label>色</label><br>
-          <input type="color" id="newColor" value="#2563eb">
-        </div>
+        <div><label>色</label><br><input type="color" id="newColor" value="#2563eb"></div>
         <div style="flex:1;">
           <label>タイトル非表示時ラベル</label>
-          <input type="text" id="newLabel" placeholder="例: 予定あり（空でもOK）" value="予定あり">
+          <input type="text" id="newLabel" value="予定あり">
         </div>
       </div>
       <div class="checks">
@@ -116,17 +76,14 @@
         <label><input type="checkbox" id="newShowTitle">タイトル表示</label>
         <label><input type="checkbox" id="newShowTime">時間表示</label>
       </div>
-      <div class="row" style="justify-content:flex-end; margin-top:8px;">
+      <div class="row" style="justify-content:flex-end;">
         <button class="btn ok" id="btnAdd">＋ 追加</button>
       </div>
     </div>
 
     <div class="card">
       <div class="row" style="justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;">登録カレンダー</div>
-          <div class="small">ここでON/OFF・色・表示ルールを変更</div>
-        </div>
+        <div>登録カレンダー</div>
         <button class="btn bad" id="btnReset">全消し</button>
       </div>
       <div class="hr"></div>
@@ -140,271 +97,116 @@
 </div>
 
 <script>
-  // ==========
-  // ★ここだけ必ず設定
-  // ==========
+  // ===== 設定 =====
   const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
+  const LS_KEY = "mycalendar.config.v1";
+  const SETTINGS_KEY = "mycalendar.settings.visible";
 
-  // ==========
-  // Storage
-  // ==========
-  const LS_KEY = "mycalendar.calendarConfig.v1";
+  // ===== Storage =====
+  function loadConfig(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }catch{ return {}; } }
+  function saveConfig(c){ localStorage.setItem(LS_KEY, JSON.stringify(c)); }
 
-  // デフォルト（初回だけ）
-  const DEFAULT_CONFIG = {
-    // "ja.japanese#holiday@group.v.calendar.google.com": {
-    //   visible: true, showTitle: true, showTime: true, label: "", color: "#16a34a"
-    // }
-  };
-
-  function loadConfig() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return structuredClone(DEFAULT_CONFIG);
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object") return structuredClone(DEFAULT_CONFIG);
-      return parsed;
-    } catch {
-      return structuredClone(DEFAULT_CONFIG);
-    }
-  }
-
-  function saveConfig(cfg) {
-    localStorage.setItem(LS_KEY, JSON.stringify(cfg));
-  }
-
-  // ==========
-  // App state
-  // ==========
   let CALENDAR_CONFIG = loadConfig();
   let calendar = null;
 
-  // ==========
-  // Helpers
-  // ==========
-  function normId(id) {
-    return (id || "").trim();
+  // ===== Calendar =====
+  function makeSources(){
+    return Object.entries(CALENDAR_CONFIG)
+      .filter(([_,c])=>c.visible)
+      .map(([id,c])=>({ googleCalendarId:id, color:c.color }));
   }
-
-  function makeEventSources(cfg) {
-    return Object.entries(cfg)
-      .filter(([_, c]) => c && c.visible)
-      .map(([calendarId, c]) => ({
-        googleCalendarId: calendarId,
-        color: c.color || undefined
-      }));
-  }
-
-  function rebuildCalendar() {
-    const el = document.getElementById("calendar");
-    if (calendar) {
-      calendar.destroy();
-      calendar = null;
-    }
-
-    calendar = new FullCalendar.Calendar(el, {
-      initialView: "timeGridWeek",
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "timeGridWeek,dayGridMonth"
-      },
-      nowIndicator: true,
-      height: "100%",
-      expandRows: true,
-      slotMinTime: "06:00:00",
-      slotMaxTime: "24:00:00",
-
+  function rebuild(){
+    if(calendar){ calendar.destroy(); calendar=null; }
+    calendar = new FullCalendar.Calendar(document.getElementById("calendar"),{
+      initialView:"timeGridWeek",
+      headerToolbar:{left:"prev,next today",center:"title",right:"timeGridWeek,dayGridMonth"},
+      nowIndicator:true, height:"100%", expandRows:true,
+      slotMinTime:"06:00:00", slotMaxTime:"24:00:00",
       googleCalendarApiKey: GOOGLE_API_KEY,
-      eventSources: makeEventSources(CALENDAR_CONFIG),
-
-      eventDidMount: (info) => {
-        const calId = info.event.source?.googleCalendarId;
-        const cfg = CALENDAR_CONFIG[calId];
-        if (!cfg) return;
-
-        // タイトル表示制御（画面上だけ）
-        if (cfg.showTitle === false) {
-          const titleEl = info.el.querySelector(".fc-event-title");
-          if (titleEl) titleEl.textContent = cfg.label ?? "";
+      eventSources: makeSources(),
+      eventDidMount:(info)=>{
+        const id = info.event.source?.googleCalendarId;
+        const cfg = CALENDAR_CONFIG[id]; if(!cfg) return;
+        if(cfg.showTitle===false){
+          const t=info.el.querySelector(".fc-event-title"); if(t) t.textContent = cfg.label ?? "";
         }
-
-        // 時間表示制御（画面上だけ）
-        if (cfg.showTime === false) {
-          const timeEl = info.el.querySelector(".fc-event-time");
-          if (timeEl) timeEl.textContent = "";
+        if(cfg.showTime===false){
+          const tm=info.el.querySelector(".fc-event-time"); if(tm) tm.textContent="";
         }
-      },
-
-      eventSourceFailure: (err) => {
-        console.error("Google Calendar fetch failed:", err);
       }
     });
-
     calendar.render();
   }
 
-  function renderList() {
-    const list = document.getElementById("calList");
-    list.innerHTML = "";
-
-    const entries = Object.entries(CALENDAR_CONFIG);
-    if (entries.length === 0) {
-      const div = document.createElement("div");
-      div.className = "small";
-      div.textContent = "まだカレンダーがありません。上のフォームから追加。";
-      list.appendChild(div);
-      return;
-    }
-
-    for (const [id, cfg] of entries) {
-      const item = document.createElement("div");
-      item.className = "item";
-
-      const top = document.createElement("div");
-      top.className = "itemTop";
-
-      const left = document.createElement("div");
-      left.style.flex = "1";
-
-      const idEl = document.createElement("div");
-      idEl.className = "id";
-      idEl.textContent = id;
-
-      const tag = document.createElement("div");
-      tag.className = "tag";
-      tag.textContent = "設定：visible / title / time / color / label";
-
-      left.appendChild(idEl);
-      left.appendChild(tag);
-
-      const right = document.createElement("div");
-      right.className = "row";
-      right.style.alignItems = "center";
-
-      const color = document.createElement("input");
-      color.type = "color";
-      color.value = cfg.color || "#2563eb";
-      color.title = "色";
-      color.addEventListener("input", () => {
-        CALENDAR_CONFIG[id].color = color.value;
-        saveConfig(CALENDAR_CONFIG);
-        rebuildCalendar();
-      });
-
-      const del = document.createElement("button");
-      del.className = "btn bad";
-      del.textContent = "削除";
-      del.addEventListener("click", () => {
-        delete CALENDAR_CONFIG[id];
-        saveConfig(CALENDAR_CONFIG);
-        renderList();
-        rebuildCalendar();
-      });
-
-      right.appendChild(color);
-      right.appendChild(del);
-
-      top.appendChild(left);
-      top.appendChild(right);
-
-      const checks = document.createElement("div");
-      checks.className = "checks";
-
-      const mkCheck = (labelText, key) => {
-        const lab = document.createElement("label");
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !!cfg[key];
-        cb.addEventListener("change", () => {
-          CALENDAR_CONFIG[id][key] = cb.checked;
-          saveConfig(CALENDAR_CONFIG);
-          rebuildCalendar();
-        });
-        lab.appendChild(cb);
-        lab.appendChild(document.createTextNode(labelText));
-        return lab;
-      };
-
-      checks.appendChild(mkCheck("表示", "visible"));
-      checks.appendChild(mkCheck("タイトル表示", "showTitle"));
-      checks.appendChild(mkCheck("時間表示", "showTime"));
-
-      const inline = document.createElement("div");
-      inline.className = "inline";
-
-      const labelWrap = document.createElement("div");
-      labelWrap.style.flex = "1";
-      const labelCap = document.createElement("label");
-      labelCap.textContent = "タイトル非表示時ラベル";
-      const labelInput = document.createElement("input");
-      labelInput.type = "text";
-      labelInput.value = cfg.label ?? "予定あり";
-      labelInput.addEventListener("change", () => {
-        CALENDAR_CONFIG[id].label = labelInput.value;
-        saveConfig(CALENDAR_CONFIG);
-        rebuildCalendar();
-      });
-      labelWrap.appendChild(labelCap);
-      labelWrap.appendChild(labelInput);
-
-      inline.appendChild(labelWrap);
-
-      item.appendChild(top);
-      item.appendChild(checks);
-      item.appendChild(inline);
-
-      list.appendChild(item);
+  // ===== UI list =====
+  function renderList(){
+    const list=document.getElementById("calList"); list.innerHTML="";
+    for(const [id,cfg] of Object.entries(CALENDAR_CONFIG)){
+      const it=document.createElement("div"); it.className="item";
+      it.innerHTML = `
+        <div class="itemTop">
+          <div class="id">${id}</div>
+          <div class="row">
+            <input type="color" value="${cfg.color||"#2563eb"}">
+            <button class="btn bad">削除</button>
+          </div>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" ${cfg.visible?"checked":""}>表示</label>
+          <label><input type="checkbox" ${cfg.showTitle?"checked":""}>タイトル表示</label>
+          <label><input type="checkbox" ${cfg.showTime?"checked":""}>時間表示</label>
+        </div>
+        <div class="inline">
+          <input type="text" value="${cfg.label??"予定あり"}">
+        </div>`;
+      const [color, del] = it.querySelectorAll("input[type=color], button");
+      const cbs = it.querySelectorAll("input[type=checkbox]");
+      const labelInput = it.querySelector("input[type=text]");
+      color.oninput=()=>{cfg.color=color.value; saveConfig(CALENDAR_CONFIG); rebuild();};
+      del.onclick=()=>{delete CALENDAR_CONFIG[id]; saveConfig(CALENDAR_CONFIG); renderList(); rebuild();};
+      cbs[0].onchange=()=>{cfg.visible=cbs[0].checked; saveConfig(CALENDAR_CONFIG); rebuild();};
+      cbs[1].onchange=()=>{cfg.showTitle=cbs[1].checked; saveConfig(CALENDAR_CONFIG); rebuild();};
+      cbs[2].onchange=()=>{cfg.showTime=cbs[2].checked; saveConfig(CALENDAR_CONFIG); rebuild();};
+      labelInput.onchange=()=>{cfg.label=labelInput.value; saveConfig(CALENDAR_CONFIG); rebuild();};
+      list.appendChild(it);
     }
   }
 
-  // ==========
-  // UI events
-  // ==========
-  document.getElementById("btnAdd").addEventListener("click", () => {
-    const id = normId(document.getElementById("newCalId").value);
-    if (!id) return alert("カレンダーIDが空。");
-
-    if (CALENDAR_CONFIG[id]) {
-      return alert("そのカレンダーIDは既に追加済み。");
-    }
-
-    const cfg = {
-      visible: document.getElementById("newVisible").checked,
-      showTitle: document.getElementById("newShowTitle").checked,
-      showTime: document.getElementById("newShowTime").checked,
-      color: document.getElementById("newColor").value,
-      label: document.getElementById("newLabel").value
+  // ===== Add / Reset =====
+  document.getElementById("btnAdd").onclick=()=>{
+    const id=document.getElementById("newCalId").value.trim();
+    if(!id || CALENDAR_CONFIG[id]) return alert("IDが空か、既に追加済み。");
+    CALENDAR_CONFIG[id]={
+      visible:document.getElementById("newVisible").checked,
+      showTitle:document.getElementById("newShowTitle").checked,
+      showTime:document.getElementById("newShowTime").checked,
+      color:document.getElementById("newColor").value,
+      label:document.getElementById("newLabel").value
     };
-
-    CALENDAR_CONFIG[id] = cfg;
     saveConfig(CALENDAR_CONFIG);
+    document.getElementById("newCalId").value="";
+    renderList(); rebuild();
+  };
+  document.getElementById("btnReset").onclick=()=>{
+    if(!confirm("全部消す？")) return;
+    CALENDAR_CONFIG={}; saveConfig(CALENDAR_CONFIG); renderList(); rebuild();
+  };
 
-    document.getElementById("newCalId").value = "";
+  // ===== Settings toggle =====
+  const side=document.querySelector(".side");
+  const wrap=document.querySelector(".wrap");
+  const btnToggle=document.getElementById("btnToggleSettings");
+  function applySettings(v){
+    side.classList.toggle("hidden", !v);
+    wrap.classList.toggle("hide-settings", !v);
+    btnToggle.textContent = v ? "設定を閉じる" : "設定を開く";
+    localStorage.setItem(SETTINGS_KEY, v?"1":"0");
+  }
+  applySettings(localStorage.getItem(SETTINGS_KEY)==="1");
+  btnToggle.onclick=()=>applySettings(side.classList.contains("hidden"));
 
-    renderList();
-    rebuildCalendar();
-  });
-
-  document.getElementById("btnReset").addEventListener("click", () => {
-    if (!confirm("全部消す？（元に戻せない）")) return;
-    CALENDAR_CONFIG = {};
-    saveConfig(CALENDAR_CONFIG);
-    renderList();
-    rebuildCalendar();
-  });
-
-  document.getElementById("btnReload").addEventListener("click", () => {
-    CALENDAR_CONFIG = loadConfig();
-    renderList();
-    rebuildCalendar();
-  });
-
-  // ==========
-  // init
-  // ==========
-  renderList();
-  rebuildCalendar();
+  // ===== init =====
+  renderList(); rebuild();
 </script>
 </body>
 </html>
