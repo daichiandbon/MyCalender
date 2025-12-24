@@ -420,7 +420,6 @@
   }
 
   function saveOverridesToLS() {
-    // 何も差分がないなら保存しない（＝“操作してない”状態を維持）
     const hasTheme = isObj(overrides.theme) && Object.keys(overrides.theme).length > 0;
     const hasCals  = isObj(overrides.calendars) && Object.keys(overrides.calendars).length > 0;
 
@@ -468,6 +467,8 @@
     }
 
     calendar = new FullCalendar.Calendar(el, {
+      firstDay: 1, // ★ 月曜始まり
+
       initialView: "timeGridWeek",
       headerToolbar: { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" },
       nowIndicator: true,
@@ -481,16 +482,34 @@
 
       eventDidMount: (info) => {
         const calId = info.event.source?.googleCalendarId;
-        const cfg = effective.calendars[calId];
+        const cfg = effective.calendars?.[calId];
         if (!cfg) return;
 
+        // タイトル制御：showTitle が明示的に false のときだけ隠してラベルに置換
         if (cfg.showTitle === false) {
-          const titleEl = info.el.querySelector(".fc-event-title");
-          if (titleEl) titleEl.textContent = cfg.label ?? "";
+          const label = (cfg.label ?? "").trim();
+
+          const titleEls = info.el.querySelectorAll(
+            ".fc-event-title, .fc-event-title-container, .fc-list-event-title"
+          );
+
+          titleEls.forEach(el => { el.textContent = ""; });
+
+          if (label) {
+            let target = info.el.querySelector(".fc-event-title");
+            if (!target) {
+              target = document.createElement("div");
+              target.className = "fc-event-title";
+              info.el.appendChild(target);
+            }
+            target.textContent = label;
+          }
         }
+
+        // 時間表示制御
         if (cfg.showTime === false) {
-          const timeEl = info.el.querySelector(".fc-event-time");
-          if (timeEl) timeEl.textContent = "";
+          const timeEls = info.el.querySelectorAll(".fc-event-time, .fc-list-event-time");
+          timeEls.forEach(el => { el.textContent = ""; });
         }
       },
 
@@ -601,13 +620,10 @@
       labelWrap.appendChild(labelInput);
       inline.appendChild(labelWrap);
 
-      color.addEventListener("input", () => {
-        setOverrideField("color", color.value);
-      });
+      color.addEventListener("input", () => setOverrideField("color", color.value));
 
       del.addEventListener("click", () => {
-        // 削除は overrides に null を入れる（baseの分も消える）
-        overrides.calendars[id] = null;
+        overrides.calendars[id] = null; // baseの分も消す
         saveOverridesToLS();
         rebuildCalendar();
         syncThemeUIFromEffective();
@@ -643,19 +659,18 @@
     $("exportArea").style.display = show ? "block" : "none";
   }
 
-  // Theme overrides helpers
   function setThemeOverride(key, value) {
     overrides.theme = Object.assign({}, overrides.theme || {}, { [key]: value });
-    saveOverridesToLS();          // ← ここで初めてlocalStorageに保存される（操作したから）
-    rebuildCalendar();            // リアルタイム反映
-    syncThemeUIFromEffective();   // UIも追従
+    saveOverridesToLS();
+    rebuildCalendar();
+    syncThemeUIFromEffective();
     renderCalendarList();
   }
 
   async function initAll() {
-    overrides = loadOverridesFromLS();        // 差分があれば読み込む
-    await loadBaseConfigFromJson();           // まず config.json を基準として読む
-    rebuildCalendar();                        // base + overrides 合成で描画
+    overrides = loadOverridesFromLS();
+    await loadBaseConfigFromJson();
+    rebuildCalendar();
     syncThemeUIFromEffective();
     renderCalendarList();
     setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
@@ -665,12 +680,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    // Drawer
     $("btnToggle").addEventListener("click", () => setDrawer(!$("drawer").classList.contains("open")));
     $("btnClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
-    // Theme controls (変更した瞬間から override 保存)
     $("tPageBg").addEventListener("input", (e) => setThemeOverride("pageBg", e.target.value));
     $("tText").addEventListener("input", (e) => setThemeOverride("text", e.target.value));
     $("tBorder").addEventListener("input", (e) => setThemeOverride("border", e.target.value));
@@ -684,7 +697,6 @@
     $("tEventText").addEventListener("input", (e) => setThemeOverride("eventText", e.target.value));
 
     $("btnThemeDefault").addEventListener("click", () => {
-      // “ページ標準”に戻す = theme override を空にする（baseは残る）
       overrides.theme = {};
       saveOverridesToLS();
       rebuildCalendar();
@@ -692,7 +704,6 @@
       renderCalendarList();
     });
 
-    // Add calendar (追加 = overridesに書く)
     $("btnAdd").addEventListener("click", () => {
       const id = normId($("newCalId").value);
       if (!id) return alert("カレンダーIDが空。");
@@ -712,7 +723,6 @@
       renderCalendarList();
     });
 
-    // Reload config.json
     $("btnReloadConfig").addEventListener("click", async () => {
       await loadBaseConfigFromJson();
       rebuildCalendar();
@@ -723,7 +733,6 @@
       $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
     });
 
-    // Clear overrides (ローカル差分だけ消す → config.json基準に戻る)
     $("btnClearOverrides").addEventListener("click", () => {
       if (!confirm("ローカル差分を消して、config.json基準に戻す？")) return;
       overrides = { theme: {}, calendars: {} };
@@ -732,11 +741,11 @@
       syncThemeUIFromEffective();
       renderCalendarList();
 
+      const base = $("statusLine").textContent.split(" / ")[0];
       const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
-      $("statusLine").textContent = ( $("statusLine").textContent.split(" / ")[0] ) + (hasLS ? " / local差分あり" : " / local差分なし");
+      $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
     });
 
-    // Export
     $("btnExportShow").addEventListener("click", () => {
       const area = $("exportArea");
       const willShow = area.style.display !== "block";
@@ -770,7 +779,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
 
-    // init
     initAll();
   });
 </script>
