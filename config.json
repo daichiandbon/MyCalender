@@ -1,0 +1,19 @@
+{
+  "theme": {
+    "pageBg": "#ffffff",
+    "text": "#374151",
+    "border": "#e5e7eb",
+    "today": "#ffdc28",
+    "todayAlpha": 35,
+    "eventText": "#ffffff"
+  },
+  "calendars": {
+    "bonbonbon0105@gmail.com": {
+      "visible": true,
+      "showTitle": true,
+      "showTime": true,
+      "color": "#2563eb",
+      "label": ""
+    }
+  }
+}
