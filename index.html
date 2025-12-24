@@ -20,29 +20,29 @@
   <div id="calendar"></div>
 
   <script>
-    // ★あなたの公開ICS URL
-    const ICS_URL = "https://calendar.google.com/calendar/ical/bonbonbon0105%40gmail.com/public/basic.ics";
+  // ★カレンダーごとの公開ICS URLを入れる（2本）
+  const ICS_URLS = [
+    "https://calendar.google.com/calendar/ical/bonbonbon0105%40gmail.com/public/basic.ics",
+    "https://calendar.google.com/calendar/ical/q5iptcp4jeta8irgvoqtf8n5ng%40group.calendar.google.com/public/basic.ics"
+  ];
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const cal = new FullCalendar.Calendar(document.getElementById("calendar"), {
-        initialView: "timeGridWeek",
-        nowIndicator: true,
-        height: "100%",
-        expandRows: true,
-        slotMinTime: "06:00:00",
-        slotMaxTime: "24:00:00",
+  document.addEventListener("DOMContentLoaded", () => {
+    const cal = new FullCalendar.Calendar(document.getElementById("calendar"), {
+      initialView: "timeGridWeek",
+      nowIndicator: true,
+      height: "100%",
+      expandRows: true,
+      slotMinTime: "06:00:00",
+      slotMaxTime: "24:00:00",
 
-        // ★ここがポイント：events じゃなく eventSources で format:'ics'
-        eventSources: [
-          {
-            url: ICS_URL,
-            format: "ics"
-          }
-        ]
-      });
-
-      cal.render();
+      eventSources: ICS_URLS.map(url => ({
+        url,
+        format: "ics"
+      }))
     });
-  </script>
+
+    cal.render();
+  });
+　</script>
 </body>
 </html>
