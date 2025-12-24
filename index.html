@@ -1,154 +1,553 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- FullCalendar core -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <!-- FullCalendar -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-<!-- Google Calendar plugin (API) -->
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
+  <!-- Google Calendar plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
 
-<!-- iCal dependencies -->
-<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6.1.11/index.global.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border:#1f2937;
+      --btn:#1f2937;
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #0b0f14;
-  color: #e5e7eb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-#calendar {
-  height: 100vh;
-  padding: 12px;
-  box-sizing: border-box;
-}
+      /* FullCalendar theme vars */
+      --fc-page-bg-color:#ffffff;          /* 互換用（使わない） */
+      --fc-page-bg-color-a:#0b0f14;        /* 背景A */
+      --fc-page-bg-color-b:#0e1420;        /* 背景B */
+      --fc-neutral-bg-color:#0b0f14;
+      --fc-neutral-text-color:#e5e7eb;
+      --fc-border-color:#1f2937;
+      --fc-today-bg-color:rgba(255,220,40,.35);
+      --fc-event-text-color:#ffffff;
+      --fc-event-border-color:transparent;
+    }
 
-/* イベント枠を完全フラットに */
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .overlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.35);
+      z-index:9997;
+      display:none;
+    }
+    .overlay.on{display:block;}
+
+    .drawer{
+      position:fixed;
+      top:0; right:0;
+      height:100vh;
+      width:420px;
+      max-width:calc(100vw - 20px);
+      transform:translateX(110%);
+      transition:transform 180ms ease;
+      border-left:1px solid var(--border);
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      padding:14px;
+      box-sizing:border-box;
+      overflow:auto;
+      z-index:9998;
+    }
+    .drawer.open{transform:translateX(0);}
+
+    .main{padding:10px;}
+    #calendar{
+      height:calc(100vh - 20px);
+      padding:0 !important;
+      box-sizing:border-box;
+      background:transparent !important;
+    }
+
+    h1{font-size:16px; margin:0 0 10px;}
+    .small{font-size:12px; color:var(--muted); line-height:1.35;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      margin:10px 0;
+      background:rgba(255,255,255,.03);
+    }
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .hr{height:1px; background:var(--border); margin:10px 0;}
+    label{font-size:12px; color:var(--muted);}
+    input[type="text"], textarea{
+      width:100%;
+      background:#0b1220;
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      outline:none;
+      box-sizing:border-box;
+    }
+    textarea{
+      min-height:120px; resize:vertical;
+      font-family:ui-monospace, Menlo, Consolas, monospace;
+      font-size:12px;
+    }
+    input[type="color"]{width:46px; height:32px; border:none; background:transparent; padding:0;}
+    input[type="number"]{
+      width:120px;
+      background:#0b1220;
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:10px;
+      outline:none;
+      box-sizing:border-box;
+    }
+    .btn{
+      background:var(--btn);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .btn:hover{filter:brightness(1.1);}
+    .btn.ok{border-color:#064e3b; background:rgba(16,185,129,.15);}
+    .btn.bad{border-color:#7f1d1d; background:rgba(239,68,68,.12);}
+    .btn.pri{border-color:#1d4ed8; background:rgba(59,130,246,.14);}
+    .btn.ghost{background:transparent;}
+
+    .list{display:flex; flex-direction:column; gap:10px;}
+    .item{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,.15);}
+    .itemTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
+    .id{font-size:12px; color:var(--text); word-break:break-all; line-height:1.2;}
+    .checks{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+    .checks label{display:flex; gap:6px; align-items:center; color:var(--text); font-size:12px;}
+    .inline{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+    .inline input[type="text"]{width:auto; flex:1; min-width:160px;}
+
+    /* ===== FullCalendar visuals ===== */
+    .fc{
+      height:calc(100vh - 20px) !important;
+      background:transparent !important;
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .fc-theme-standard td,
+    .fc-theme-standard th,
+    .fc-theme-standard .fc-scrollgrid{
+      border-color:var(--fc-border-color) !important;
+    }
+    .fc .fc-toolbar-title,
+    .fc .fc-col-header-cell-cushion,
+    .fc .fc-timegrid-axis-cushion,
+    .fc .fc-timegrid-slot-label-cushion{
+      color:var(--fc-neutral-text-color) !important;
+    }
+    .fc .fc-button{color:#fff !important;}
+    .fc .fc-event{color:var(--fc-event-text-color) !important;}
+    .fc .fc-event-title{
+      white-space: normal !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 今日の強調（見えない問題対策） */
+    .fc .fc-day-today{
+      background:var(--fc-today-bg-color) !important;
+    }
+
+    /* ===== 交互背景（縦罫線が無くても区別できる） ===== */
+    /* week(timeGrid) */
+    .fc .fc-timegrid-col:nth-child(odd) { background: var(--fc-page-bg-color-a) !important; }
+    .fc .fc-timegrid-col:nth-child(even){ background: var(--fc-page-bg-color-b) !important; }
+    /* month(dayGrid) */
+    .fc .fc-daygrid-day:nth-child(odd) { background: var(--fc-page-bg-color-a) !important; }
+    .fc .fc-daygrid-day:nth-child(even){ background: var(--fc-page-bg-color-b) !important; }
+
+    /* 背景が効くようにベースも透過に */
+    .fc .fc-scrollgrid, .fc .fc-scrollgrid-section, .fc .fc-scrollgrid-section > *{
+      background:transparent !important;
+    }
+    .fc .fc-timegrid-slot, .fc .fc-timegrid-axis, .fc .fc-daygrid-day-frame{
+      background:transparent !important;
+    }
+    /* イベント枠のボーダーを完全に消す（全状態対応） */
 .fc .fc-event,
 .fc .fc-event-main,
 .fc .fc-event-selected,
 .fc .fc-event:hover,
+.fc .fc-event.fc-event-selected,
 .fc .fc-event.fc-event-dragging {
   border: none !important;
   box-shadow: none !important;
 }
 
-/* タイトル折返し */
-.fc .fc-event-title {
-  white-space: normal !important;
-}
-</style>
+
+    /* カスタム設定ボタン（ツールバー） */
+    .fc .fc-settings-button{
+      padding:0 10px !important;
+      font-size:16px !important;
+      line-height:1 !important;
+    }
+
+    /* 折りたたみセクション */
+    .collapsibleBody{display:none; margin-top:10px;}
+    .collapsibleBody.on{display:block;}
+  </style>
 </head>
 
 <body>
-<div id="calendar"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+    <div id="calendar"></div>
+  </main>
+
+  <aside class="drawer" id="drawer">
+    <h1>設定</h1>
+    <div class="small">
+      起動時は <b>config.json</b> を基準に読み込み。<br>
+      変更した瞬間から差分だけを <b>localStorage</b> に保存して反映。<br>
+      Export は「今見えてる状態（基準＋差分）」を新しい config.json として出力。
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div class="small" id="statusLine">status: ...</div>
+        <button class="btn" id="btnClose">閉じる</button>
+      </div>
+      <div class="hr"></div>
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn" id="btnReloadConfig">config.json 再読込</button>
+        <button class="btn bad" id="btnClearOverrides">ローカル差分を消す</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;">Export JSON</div>
+          <div class="small">今の状態を config.json 形式で出力</div>
+        </div>
+        <button class="btn pri" id="btnExportDownload">Download</button>
+      </div>
+      <div class="hr"></div>
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn" id="btnExportCopy">Copy</button>
+        <button class="btn" id="btnExportShow">表示</button>
+      </div>
+      <div id="exportArea" style="display:none; margin-top:10px;">
+        <label>config.json</label>
+        <textarea id="exportText" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;">カレンダー外観</div>
+          <div class="small">背景A/B（交互） / 文字 / 罫線 / 今日 / イベント文字</div>
+        </div>
+        <button class="btn" id="btnThemeDefault">このページ標準に戻す</button>
+      </div>
+      <div class="hr"></div>
+
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <label>背景A</label><br>
+          <input type="color" id="tBgA">
+        </div>
+        <div>
+          <label>背景B</label><br>
+          <input type="color" id="tBgB">
+        </div>
+        <div>
+          <label>文字色</label><br>
+          <input type="color" id="tText">
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <div>
+          <label>罫線色</label><br>
+          <input type="color" id="tBorder">
+        </div>
+        <div>
+          <label>今日の色</label><br>
+          <input type="color" id="tToday">
+        </div>
+        <div>
+          <label>今日の強さ(0〜100)</label><br>
+          <input type="number" id="tTodayAlpha" min="0" max="100" step="5">
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-start; margin-top:10px;">
+        <div>
+          <label>イベント文字色</label><br>
+          <input type="color" id="tEventText">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px;">カレンダー追加</div>
+        </div>
+        <button class="btn ghost" id="btnToggleAdd">開く</button>
+      </div>
+
+      <div class="collapsibleBody" id="addBody">
+        <div class="hr"></div>
+
+        <div class="small">Googleカレンダーの「カレンダーID」を貼る</div>
+        <div style="height:6px;"></div>
+
+        <label>カレンダーID</label>
+        <input type="text" id="newCalId" placeholder="例: xxxx@group.calendar.google.com / xxxx@gmail.com" />
+
+        <div class="inline">
+          <div>
+            <label>色</label><br>
+            <input type="color" id="newColor" value="#2563eb">
+          </div>
+          <div style="flex:1;">
+            <label>タイトル非表示時ラベル</label>
+            <input type="text" id="newLabel" value="予定あり">
+          </div>
+        </div>
+
+        <div class="checks">
+          <label><input type="checkbox" id="newVisible" checked>表示</label>
+          <label><input type="checkbox" id="newShowTitle" checked>タイトル表示</label>
+          <label><input type="checkbox" id="newShowTime" checked>時間表示</label>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:8px;">
+          <button class="btn ok" id="btnAdd">＋ 追加</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <div style="font-size:13px;">登録カレンダー</div>
+        <div class="small">ON/OFF・色・表示ルールを変更</div>
+      </div>
+      <div class="hr"></div>
+      <div class="list" id="calList"></div>
+    </div>
+  </aside>
 
 <script>
-/* =========================
-   Google API Key（使わないなら空でOK）
-========================= */
-const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4"; // 例: "AIzaSy...."
+  // ========= 必須 =========
+  const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
+  // =======================
 
-/* =========================
-   カレンダー定義（iCal / API 混在）
-========================= */
-const CALENDARS = {
-  /* ---------- Google API ---------- */
-  "my-google": {
-    type: "google",
-    id: "yourname@gmail.com",
-    visible: true,
-    showTitle: true,
-    showTime: true,
-    color: "#2563eb"
-  },
+  const CONFIG_URL = "./config.json";
 
-  /* ---------- iCal ---------- */
-  "company-ical": {
-    type: "ical",
-    url: "https://calendar.google.com/calendar/ical/sugimoto%40shirogumi.co.jp/public/basic.ics",
-    visible: true,
-    showTitle: false,
-    showTime: false,
-    label: "予定あり",
-    color: "#7c3aed"
+  // localStorage keys
+  const LS_OVERRIDE_KEY = "mycalendar.overrides.v1";
+  const LS_DRAWER_KEY   = "mycalendar.drawer.open";
+  const LS_ADDOPEN_KEY  = "mycalendar.add.open";
+
+  // “ページ標準”のテーマ（config.jsonが無い時の保険）
+  const PAGE_DEFAULT_THEME = {
+    // 互換のため pageBg が来ても吸収する（pageBgA/Bに統一）
+    pageBgA: "#0b0f14",
+    pageBgB: "#0e1420",
+    text: "#e5e7eb",
+    border: "#1f2937",
+    today: "#ffdc28",
+    todayAlpha: 35,
+    eventText: "#ffffff"
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const clone = (obj) => structuredClone(obj);
+  const isObj = (x) => x && typeof x === "object" && !Array.isArray(x);
+
+  function rgbaFromHex(hex, alpha01) {
+    const h = (hex || "").replace("#","").trim();
+    if (h.length !== 6) return `rgba(255,220,40,${alpha01})`;
+    const r = parseInt(h.slice(0,2), 16);
+    const g = parseInt(h.slice(2,4), 16);
+    const b = parseInt(h.slice(4,6), 16);
+    return `rgba(${r},${g},${b},${alpha01})`;
   }
-};
 
-/* =========================
-   eventSources 生成
-========================= */
-function buildEventSources() {
-  const sources = [];
+  function normalizeTheme(t){
+    const out = Object.assign({}, PAGE_DEFAULT_THEME, isObj(t) ? t : {});
+    // 旧pageBgを使ってるconfigが来たらA/Bへ反映
+    if (out.pageBg && !out.pageBgA && !out.pageBgB) {
+      out.pageBgA = out.pageBg;
+      out.pageBgB = out.pageBg;
+    }
+    // 片方だけなら両方同じにする
+    if (!out.pageBgA && out.pageBgB) out.pageBgA = out.pageBgB;
+    if (!out.pageBgB && out.pageBgA) out.pageBgB = out.pageBgA;
+    return out;
+  }
 
-  Object.entries(CALENDARS).forEach(([key, cfg]) => {
-    if (!cfg.visible) return;
+  function mergeTheme(base, over){
+    const out = clone(base);
+    if (isObj(over)) Object.assign(out, over);
+    return normalizeTheme(out);
+  }
 
-    if (cfg.type === "google") {
-      sources.push({
-        id: key,
-        googleCalendarId: cfg.id,
-        color: cfg.color
-      });
+  function mergeCalendars(base, over){
+    const out = clone(base);
+    if (!isObj(over)) return out;
+    for (const [id, v] of Object.entries(over)) {
+      if (v === null) { delete out[id]; continue; }
+      if (!isObj(v)) continue;
+      out[id] = Object.assign({}, out[id] || {}, v);
+    }
+    return out;
+  }
+
+  function applyThemeToRoot(theme) {
+    const root = document.documentElement.style;
+
+    root.setProperty("--fc-page-bg-color-a", theme.pageBgA);
+    root.setProperty("--fc-page-bg-color-b", theme.pageBgB);
+    root.setProperty("--fc-neutral-bg-color", theme.pageBgA);
+    root.setProperty("--fc-neutral-text-color", theme.text);
+    root.setProperty("--fc-border-color", theme.border);
+    root.setProperty("--fc-today-bg-color",
+      rgbaFromHex(theme.today, Math.max(0, Math.min(1, theme.todayAlpha / 100)))
+    );
+    root.setProperty("--fc-event-text-color", theme.eventText);
+  }
+
+  function makeEventSources(calendarsEffective) {
+    return Object.entries(calendarsEffective)
+      .filter(([_, c]) => c && c.visible)
+      .map(([calendarId, c]) => ({
+        id: calendarId,
+        googleCalendarId: calendarId,
+        color: c.color || undefined
+      }));
+  }
+
+  // ========= state =========
+  let baseConfig = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} };
+  let overrides  = { theme: {}, calendars: {} };
+  let effective  = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} };
+  let calendar = null;
+
+  function loadOverridesFromLS() {
+    try {
+      const raw = localStorage.getItem(LS_OVERRIDE_KEY);
+      if (!raw) return { theme: {}, calendars: {} };
+      const obj = JSON.parse(raw);
+      if (!isObj(obj)) return { theme: {}, calendars: {} };
+      return {
+        theme: isObj(obj.theme) ? obj.theme : {},
+        calendars: isObj(obj.calendars) ? obj.calendars : {}
+      };
+    } catch {
+      return { theme: {}, calendars: {} };
+    }
+  }
+
+  function saveOverridesToLS() {
+    const hasTheme = isObj(overrides.theme) && Object.keys(overrides.theme).length > 0;
+    const hasCals  = isObj(overrides.calendars) && Object.keys(overrides.calendars).length > 0;
+    if (!hasTheme && !hasCals) {
+      localStorage.removeItem(LS_OVERRIDE_KEY);
+      return;
+    }
+    localStorage.setItem(LS_OVERRIDE_KEY, JSON.stringify(overrides));
+  }
+
+  function recomputeEffective() {
+    effective.theme = mergeTheme(baseConfig.theme || PAGE_DEFAULT_THEME, overrides.theme);
+    effective.calendars = mergeCalendars(baseConfig.calendars || {}, overrides.calendars);
+  }
+
+  async function loadBaseConfigFromJson() {
+    try {
+      const res = await fetch(CONFIG_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`config.json fetch failed: ${res.status}`);
+      const data = await res.json();
+      baseConfig = {
+        theme: normalizeTheme(data.theme || {}),
+        calendars: isObj(data.calendars) ? data.calendars : {}
+      };
+      $("statusLine").textContent = "status: config.json 読み込みOK";
+      return true;
+    } catch (e) {
+      console.warn(e);
+      baseConfig = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} };
+      $("statusLine").textContent = "status: config.json なし（ページ標準で起動）";
+      return false;
+    }
+  }
+
+  function setDrawer(open) {
+    $("drawer").classList.toggle("open", open);
+    $("overlay").classList.toggle("on", open);
+    localStorage.setItem(LS_DRAWER_KEY, open ? "1" : "0");
+  }
+
+  function rebuildCalendar() {
+    recomputeEffective();
+    applyThemeToRoot(effective.theme);
+
+    const el = $("calendar");
+    if (!el) return;
+
+    if (calendar) {
+      calendar.destroy();
+      calendar = null;
     }
 
-    if (cfg.type === "ical") {
-      sources.push({
-        id: key,
-        url: cfg.url,
-        format: "ics",
-        color: cfg.color
-      });
-    }
-  });
-
-  return sources;
-}
-
-/* =========================
-   FullCalendar 初期化
-========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  const calendar = new FullCalendar.Calendar(
-    document.getElementById("calendar"),
-    {
-      firstDay: 1, // 月曜始まり
+    calendar = new FullCalendar.Calendar(el, {
+      firstDay: 1,
       initialView: "timeGridWeek",
-      height: "100%",
-      expandRows: true,
-      nowIndicator: true,
-      slotMinTime: "06:00:00",
-      slotMaxTime: "24:00:00",
-
+      customButtons: {
+        settings: {
+          text: "⚙",
+          click: () => setDrawer(!$("drawer").classList.contains("open")),
+        }
+      },
       headerToolbar: {
         left: "prev,next today",
         center: "title",
-        right: "timeGridWeek,dayGridMonth"
+        // ★ 右上：week/month の左に ⚙ を置く
+        right: "settings timeGridWeek,dayGridMonth",
       },
 
-      /* Google API（空なら無視される） */
-      googleCalendarApiKey: GOOGLE_API_KEY || undefined,
+      nowIndicator: true,
+      height: "100%",
+      expandRows: true,
+      slotMinTime: "06:00:00",
+      slotMaxTime: "24:00:00",
 
-      eventSources: buildEventSources(),
+      googleCalendarApiKey: GOOGLE_API_KEY,
+      eventSources: makeEventSources(effective.calendars),
 
-      /* =========================
-         タイトル / 時間 表示制御
-      ========================= */
-      eventDidMount(info) {
-        const srcId = info.event.source?.id;
-        const cfg = CALENDARS[srcId];
+      eventDidMount: (info) => {
+        const calId = info.event.source?.id;
+        const cfg = effective.calendars?.[calId];
         if (!cfg) return;
 
-        /* タイトル制御 */
+        // タイトル制御（枠内のtitleにラベルを入れる）
         if (cfg.showTitle === false) {
-          const label = cfg.label ?? "";
+          const label = (cfg.label ?? "").trim();
 
           let titleEl =
             info.el.querySelector(".fc-event-title") ||
@@ -162,30 +561,309 @@ document.addEventListener("DOMContentLoaded", () => {
               info.el.querySelector(".fc-event-main") ||
               info.el;
 
-            const wrap = document.createElement("div");
-            wrap.className = "fc-event-title-container";
+            const container = document.createElement("div");
+            container.className = "fc-event-title-container";
 
             titleEl = document.createElement("div");
             titleEl.className = "fc-event-title";
             titleEl.textContent = label;
 
-            wrap.appendChild(titleEl);
-            frame.appendChild(wrap);
+            container.appendChild(titleEl);
+            frame.appendChild(container);
           }
         }
 
-        /* 時間制御 */
+        // 時間表示制御
         if (cfg.showTime === false) {
-          info.el
-            .querySelectorAll(".fc-event-time, .fc-list-event-time")
-            .forEach(el => el.textContent = "");
+          const timeEls = info.el.querySelectorAll(".fc-event-time, .fc-list-event-time");
+          timeEls.forEach(el => { el.textContent = ""; });
         }
-      }
-    }
-  );
+      },
 
-  calendar.render();
-});
+      eventSourceFailure: (err) => {
+        console.error("Google Calendar fetch failed:", err);
+      }
+    });
+
+    calendar.render();
+
+    // customボタンにクラス付与（見た目調整）
+    setTimeout(() => {
+      const btn = document.querySelector(".fc-settings-button");
+      if (btn) btn.classList.add("fc-settings-button");
+    }, 0);
+  }
+
+  function syncThemeUIFromEffective() {
+    $("tBgA").value = effective.theme.pageBgA;
+    $("tBgB").value = effective.theme.pageBgB;
+    $("tText").value = effective.theme.text;
+    $("tBorder").value = effective.theme.border;
+    $("tToday").value = effective.theme.today;
+    $("tTodayAlpha").value = effective.theme.todayAlpha;
+    $("tEventText").value = effective.theme.eventText;
+  }
+
+  function renderCalendarList() {
+    const list = $("calList");
+    list.innerHTML = "";
+
+    const entries = Object.entries(effective.calendars);
+    if (entries.length === 0) {
+      const div = document.createElement("div");
+      div.className = "small";
+      div.textContent = "config.json に calendars が無いか、まだ追加してない。";
+      list.appendChild(div);
+      return;
+    }
+
+    for (const [id, cfgEff] of entries) {
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const top = document.createElement("div");
+      top.className = "itemTop";
+
+      const left = document.createElement("div");
+      left.style.flex = "1";
+
+      const idEl = document.createElement("div");
+      idEl.className = "id";
+      idEl.textContent = id;
+      left.appendChild(idEl);
+
+      const right = document.createElement("div");
+      right.className = "row";
+
+      const color = document.createElement("input");
+      color.type = "color";
+      color.value = cfgEff.color || "#2563eb";
+      color.title = "色";
+
+      const del = document.createElement("button");
+      del.className = "btn bad";
+      del.textContent = "削除";
+
+      right.appendChild(color);
+      right.appendChild(del);
+
+      top.appendChild(left);
+      top.appendChild(right);
+
+      const checks = document.createElement("div");
+      checks.className = "checks";
+
+      function setOverrideField(key, value) {
+        overrides.calendars[id] = Object.assign({}, overrides.calendars[id] || {}, { [key]: value });
+        saveOverridesToLS();
+        rebuildCalendar();
+        syncThemeUIFromEffective();
+        renderCalendarList();
+      }
+
+      function addCheck(text, key) {
+        const lab = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = (cfgEff[key] !== false);
+        cb.addEventListener("change", () => setOverrideField(key, cb.checked));
+        lab.appendChild(cb);
+        lab.appendChild(document.createTextNode(text));
+        checks.appendChild(lab);
+      }
+
+      addCheck("表示", "visible");
+      addCheck("タイトル表示", "showTitle");
+      addCheck("時間表示", "showTime");
+
+      const inline = document.createElement("div");
+      inline.className = "inline";
+
+      const labelWrap = document.createElement("div");
+      labelWrap.style.flex = "1";
+
+      const labelCap = document.createElement("label");
+      labelCap.textContent = "タイトル非表示時ラベル";
+
+      const labelInput = document.createElement("input");
+      labelInput.type = "text";
+      labelInput.value = cfgEff.label ?? "予定あり";
+      labelInput.addEventListener("change", () => setOverrideField("label", labelInput.value));
+
+      labelWrap.appendChild(labelCap);
+      labelWrap.appendChild(labelInput);
+      inline.appendChild(labelWrap);
+
+      color.addEventListener("input", () => setOverrideField("color", color.value));
+
+      del.addEventListener("click", () => {
+        overrides.calendars[id] = null;
+        saveOverridesToLS();
+        rebuildCalendar();
+        syncThemeUIFromEffective();
+        renderCalendarList();
+      });
+
+      item.appendChild(top);
+      item.appendChild(checks);
+      item.appendChild(inline);
+      list.appendChild(item);
+    }
+  }
+
+  function normId(id){ return (id || "").trim(); }
+
+  function showExportArea(show) {
+    $("exportArea").style.display = show ? "block" : "none";
+  }
+
+  function buildExportObject() {
+    recomputeEffective();
+    return { theme: effective.theme, calendars: effective.calendars };
+  }
+
+  function setExportText() {
+    const t = JSON.stringify(buildExportObject(), null, 2);
+    $("exportText").value = t;
+    return t;
+  }
+
+  function setThemeOverride(key, value) {
+    overrides.theme = Object.assign({}, overrides.theme || {}, { [key]: value });
+    saveOverridesToLS();
+    rebuildCalendar();
+    syncThemeUIFromEffective();
+    renderCalendarList();
+  }
+
+  function setAddOpen(open){
+    $("addBody").classList.toggle("on", open);
+    $("btnToggleAdd").textContent = open ? "閉じる" : "開く";
+    localStorage.setItem(LS_ADDOPEN_KEY, open ? "1" : "0");
+  }
+
+  async function initAll() {
+    overrides = loadOverridesFromLS();
+    await loadBaseConfigFromJson();
+    rebuildCalendar();
+    syncThemeUIFromEffective();
+    renderCalendarList();
+
+    setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
+    setAddOpen(localStorage.getItem(LS_ADDOPEN_KEY) === "1");
+
+    const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+    $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    $("btnClose").addEventListener("click", () => setDrawer(false));
+    $("overlay").addEventListener("click", () => setDrawer(false));
+
+    $("btnToggleAdd").addEventListener("click", () => {
+      const open = !$("addBody").classList.contains("on");
+      setAddOpen(open);
+    });
+
+    $("tBgA").addEventListener("input", (e) => setThemeOverride("pageBgA", e.target.value));
+    $("tBgB").addEventListener("input", (e) => setThemeOverride("pageBgB", e.target.value));
+    $("tText").addEventListener("input", (e) => setThemeOverride("text", e.target.value));
+    $("tBorder").addEventListener("input", (e) => setThemeOverride("border", e.target.value));
+    $("tToday").addEventListener("input", (e) => setThemeOverride("today", e.target.value));
+    $("tTodayAlpha").addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      const vv = isFinite(v) ? Math.max(0, Math.min(100, v)) : 35;
+      e.target.value = vv;
+      setThemeOverride("todayAlpha", vv);
+    });
+    $("tEventText").addEventListener("input", (e) => setThemeOverride("eventText", e.target.value));
+
+    $("btnThemeDefault").addEventListener("click", () => {
+      overrides.theme = {};
+      saveOverridesToLS();
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+    });
+
+    $("btnAdd").addEventListener("click", () => {
+      const id = normId($("newCalId").value);
+      if (!id) return alert("カレンダーIDが空。");
+
+      overrides.calendars[id] = {
+        visible: $("newVisible").checked,
+        showTitle: $("newShowTitle").checked,
+        showTime: $("newShowTime").checked,
+        color: $("newColor").value,
+        label: $("newLabel").value
+      };
+
+      saveOverridesToLS();
+      $("newCalId").value = "";
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+    });
+
+    $("btnReloadConfig").addEventListener("click", async () => {
+      await loadBaseConfigFromJson();
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+
+      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+      const base = $("statusLine").textContent.split(" / ")[0];
+      $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
+    });
+
+    $("btnClearOverrides").addEventListener("click", () => {
+      if (!confirm("ローカル差分を消して、config.json基準に戻す？")) return;
+      overrides = { theme: {}, calendars: {} };
+      localStorage.removeItem(LS_OVERRIDE_KEY);
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+
+      const base = $("statusLine").textContent.split(" / ")[0];
+      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+      $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
+    });
+
+    $("btnExportShow").addEventListener("click", () => {
+      const area = $("exportArea");
+      const willShow = area.style.display !== "block";
+      if (willShow) setExportText();
+      showExportArea(willShow);
+    });
+
+    $("btnExportCopy").addEventListener("click", async () => {
+      try {
+        const t = setExportText();
+        await navigator.clipboard.writeText(t);
+        alert("コピーした（config.json用）");
+      } catch (e) {
+        console.error(e);
+        alert("コピー失敗。表示を開いて手動でコピーして。");
+      }
+    });
+
+    $("btnExportDownload").addEventListener("click", () => {
+      const t = setExportText();
+      const blob = new Blob([t], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "config.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    initAll();
+  });
 </script>
 </body>
 </html>
