@@ -21,13 +21,13 @@
       --border:#1f2937;
       --btn:#1f2937;
 
-      --fc-page-bg-color: #ffffff;
-      --fc-neutral-bg-color: #f3f4f6;
-      --fc-neutral-text-color: #374151;
-      --fc-border-color: #e5e7eb;
-      --fc-today-bg-color: rgba(255, 220, 40, 0.35);
-      --fc-event-text-color: #ffffff;
-      --fc-event-border-color: transparent;
+      --fc-page-bg-color:#ffffff;
+      --fc-neutral-bg-color:#f3f4f6;
+      --fc-neutral-text-color:#374151;
+      --fc-border-color:#e5e7eb;
+      --fc-today-bg-color:rgba(255,220,40,.35);
+      --fc-event-text-color:#ffffff;
+      --fc-event-border-color:transparent;
     }
 
     html,body{
@@ -38,12 +38,11 @@
       color:var(--text);
     }
 
-    /* 設定ボタン（右下） */
     .toggleBtn{
       position:fixed;
       right:12px;
       bottom:12px;
-      z-index: 9999;
+      z-index:9999;
       padding:10px 14px;
       border-radius:12px;
       border:1px solid var(--border);
@@ -51,14 +50,14 @@
       color:var(--text);
       cursor:pointer;
       font-size:12px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.45);
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
     }
     .toggleBtn:hover{filter:brightness(1.08);}
 
     .overlay{
       position:fixed; inset:0;
-      background: rgba(0,0,0,0.35);
-      z-index: 9997;
+      background:rgba(0,0,0,.35);
+      z-index:9997;
       display:none;
     }
     .overlay.on{display:block;}
@@ -67,25 +66,25 @@
       position:fixed;
       top:0; right:0;
       height:100vh;
-      width: 420px;
-      max-width: calc(100vw - 20px);
-      transform: translateX(110%);
-      transition: transform 180ms ease;
+      width:420px;
+      max-width:calc(100vw - 20px);
+      transform:translateX(110%);
+      transition:transform 180ms ease;
       border-left:1px solid var(--border);
-      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
       padding:14px;
       box-sizing:border-box;
       overflow:auto;
-      z-index: 9998;
+      z-index:9998;
     }
-    .drawer.open{ transform: translateX(0); }
+    .drawer.open{transform:translateX(0);}
 
     .main{padding:10px;}
     #calendar{
-      height: calc(100vh - 20px);
-      background: transparent !important;
-      padding: 0 !important;
+      height:calc(100vh - 20px);
+      padding:0 !important;
       box-sizing:border-box;
+      background:transparent !important;
     }
 
     h1{font-size:16px; margin:0 0 10px;}
@@ -95,7 +94,7 @@
       border-radius:12px;
       padding:10px;
       margin:10px 0;
-      background:rgba(255,255,255,0.03);
+      background:rgba(255,255,255,.03);
     }
     .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
     .hr{height:1px; background:var(--border); margin:10px 0;}
@@ -110,7 +109,11 @@
       outline:none;
       box-sizing:border-box;
     }
-    textarea{min-height:120px; resize:vertical; font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px;}
+    textarea{
+      min-height:120px; resize:vertical;
+      font-family:ui-monospace, Menlo, Consolas, monospace;
+      font-size:12px;
+    }
     input[type="color"]{width:46px; height:32px; border:none; background:transparent; padding:0;}
     input[type="number"]{
       width:120px;
@@ -137,7 +140,7 @@
     .btn.pri{border-color:#1d4ed8; background:rgba(59,130,246,.14);}
 
     .list{display:flex; flex-direction:column; gap:10px;}
-    .item{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,0.15);}
+    .item{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,.15);}
     .itemTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
     .id{font-size:12px; color:var(--text); word-break:break-all; line-height:1.2;}
     .checks{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
@@ -145,43 +148,43 @@
     .inline{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;}
     .inline input[type="text"]{width:auto; flex:1; min-width:160px;}
 
-    /* FullCalendar fixes */
+    /* FullCalendar visuals */
     .fc{
-      height: calc(100vh - 20px) !important;
-      background: var(--fc-page-bg-color) !important;
-      border-radius: 14px;
+      height:calc(100vh - 20px) !important;
+      background:var(--fc-page-bg-color) !important;
+      border-radius:14px;
     }
     .fc-theme-standard td,
     .fc-theme-standard th,
     .fc-theme-standard .fc-scrollgrid{
-      border-color: var(--fc-border-color) !important;
+      border-color:var(--fc-border-color) !important;
     }
     .fc .fc-timegrid-slot,
     .fc .fc-timegrid-col,
     .fc .fc-daygrid-day{
-      background: var(--fc-page-bg-color) !important;
+      background:var(--fc-page-bg-color) !important;
     }
     .fc .fc-toolbar-title,
     .fc .fc-col-header-cell-cushion,
     .fc .fc-timegrid-axis-cushion,
     .fc .fc-timegrid-slot-label-cushion{
-      color: var(--fc-neutral-text-color) !important;
+      color:var(--fc-neutral-text-color) !important;
     }
-    .fc .fc-button{ color:#fff !important; }
-    .fc .fc-event{ color: var(--fc-event-text-color) !important; }
+    .fc .fc-button{color:#fff !important;}
+    .fc .fc-event{color:var(--fc-event-text-color) !important;}
 
-    /* 縦罫線を強制 */
+    /* 縦罫線（見えない問題対策） */
     .fc .fc-timegrid-col,
     .fc .fc-daygrid-day{
-      border-right: 1px solid var(--fc-border-color) !important;
+      border-right:1px solid var(--fc-border-color) !important;
     }
     .fc .fc-scrollgrid-section-body td{
-      border-right: 1px solid var(--fc-border-color) !important;
+      border-right:1px solid var(--fc-border-color) !important;
     }
 
-    /* 今日の強調を確実に */
+    /* 今日の強調（見えない問題対策） */
     .fc .fc-day-today{
-      background: var(--fc-today-bg-color) !important;
+      background:var(--fc-today-bg-color) !important;
     }
   </style>
 </head>
@@ -196,17 +199,21 @@
 
   <aside class="drawer" id="drawer">
     <h1>設定</h1>
-    <div class="small">設定はこのブラウザに保存（localStorage）。Export で JSON を吐ける。</div>
+    <div class="small">
+      起動時は <b>config.json</b> を基準に読み込み。<br>
+      何か変更した瞬間から、その差分だけを <b>localStorage</b> に保存して反映。<br>
+      Export は「今見えてる状態（基準＋差分）」を新しい config.json として出す。
+    </div>
 
     <div class="card">
       <div class="row" style="justify-content:space-between;">
-        <div class="small">この端末に保存</div>
+        <div class="small" id="statusLine">status: ...</div>
         <button class="btn" id="btnClose">閉じる</button>
       </div>
       <div class="hr"></div>
       <div class="row" style="justify-content:space-between;">
-        <button class="btn" id="btnReload">保存を再読込</button>
-        <button class="btn bad" id="btnResetAll">保存を全消し</button>
+        <button class="btn" id="btnReloadConfig">config.json 再読込</button>
+        <button class="btn bad" id="btnClearOverrides">ローカル差分を消す</button>
       </div>
     </div>
 
@@ -214,7 +221,7 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <div style="font-size:13px;">Export JSON</div>
-          <div class="small">今の設定を config.json 形式で出力</div>
+          <div class="small">今の状態を config.json 形式で出力</div>
         </div>
         <button class="btn pri" id="btnExportDownload">Download</button>
       </div>
@@ -224,7 +231,7 @@
         <button class="btn" id="btnExportShow">表示</button>
       </div>
       <div id="exportArea" style="display:none; margin-top:10px;">
-        <label>config.json（これをGitHubに貼る）</label>
+        <label>config.json</label>
         <textarea id="exportText" spellcheck="false"></textarea>
       </div>
     </div>
@@ -235,7 +242,7 @@
           <div style="font-size:13px;">カレンダー外観</div>
           <div class="small">背景 / 文字 / 罫線 / 今日 / イベント文字</div>
         </div>
-        <button class="btn" id="btnThemeDefault">デフォルト</button>
+        <button class="btn" id="btnThemeDefault">このページ標準に戻す</button>
       </div>
       <div class="hr"></div>
 
@@ -311,19 +318,18 @@
   </aside>
 
 <script>
-  // ======================
-  // 設定（ここだけ必須）
-  // ======================
+  // ========= 必須 =========
   const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
+  // =======================
 
-  // storage keys
-  const LS_CAL_KEY   = "mycalendar.calendarConfig.v2";
-  const LS_THEME_KEY = "mycalendar.theme.v1";
+  const CONFIG_URL = "./config.json"; // index.html と同じ階層
+
+  // localStorage keys（差分だけ入れる）
+  const LS_OVERRIDE_KEY = "mycalendar.overrides.v1";
   const LS_DRAWER_KEY = "mycalendar.drawer.open";
 
-  // defaults
-  const DEFAULT_CAL_CONFIG = {};
-  const DEFAULT_THEME = {
+  // “ページ標準”のテーマ（config.jsonが無い時の保険）
+  const PAGE_DEFAULT_THEME = {
     pageBg: "#ffffff",
     text: "#374151",
     border: "#e5e7eb",
@@ -334,19 +340,32 @@
 
   const $ = (id) => document.getElementById(id);
 
-  function loadJSON(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return structuredClone(fallback);
-      const obj = JSON.parse(raw);
-      if (!obj || typeof obj !== "object") return structuredClone(fallback);
-      return obj;
-    } catch {
-      return structuredClone(fallback);
-    }
+  function clone(obj){ return structuredClone(obj); }
+
+  function isObj(x){ return x && typeof x === "object" && !Array.isArray(x); }
+
+  // shallow merge for theme, deep-ish for calendars
+  function mergeTheme(base, over){
+    const out = clone(base);
+    if (isObj(over)) Object.assign(out, over);
+    return out;
   }
-  function saveJSON(key, obj) {
-    localStorage.setItem(key, JSON.stringify(obj));
+
+  function mergeCalendars(base, over){
+    const out = clone(base);
+    if (!isObj(over)) return out;
+
+    // over のキーを反映（追加/上書き/削除）
+    // 削除は { id: null } で表現
+    for (const [id, v] of Object.entries(over)) {
+      if (v === null) {
+        delete out[id];
+        continue;
+      }
+      if (!isObj(v)) continue;
+      out[id] = Object.assign({}, out[id] || {}, v);
+    }
+    return out;
   }
 
   function rgbaFromHex(hex, alpha01) {
@@ -358,22 +377,20 @@
     return `rgba(${r},${g},${b},${alpha01})`;
   }
 
-  let CALENDAR_CONFIG = loadJSON(LS_CAL_KEY, DEFAULT_CAL_CONFIG);
-  let THEME = loadJSON(LS_THEME_KEY, DEFAULT_THEME);
-  let calendar = null;
-
-  function applyThemeToRoot() {
+  function applyThemeToRoot(theme) {
     const root = document.documentElement.style;
-    root.setProperty("--fc-page-bg-color", THEME.pageBg);
-    root.setProperty("--fc-neutral-bg-color", THEME.pageBg);
-    root.setProperty("--fc-neutral-text-color", THEME.text);
-    root.setProperty("--fc-border-color", THEME.border);
-    root.setProperty("--fc-today-bg-color", rgbaFromHex(THEME.today, Math.max(0, Math.min(1, THEME.todayAlpha / 100))));
-    root.setProperty("--fc-event-text-color", THEME.eventText);
+    root.setProperty("--fc-page-bg-color", theme.pageBg);
+    root.setProperty("--fc-neutral-bg-color", theme.pageBg);
+    root.setProperty("--fc-neutral-text-color", theme.text);
+    root.setProperty("--fc-border-color", theme.border);
+    root.setProperty("--fc-today-bg-color",
+      rgbaFromHex(theme.today, Math.max(0, Math.min(1, theme.todayAlpha / 100)))
+    );
+    root.setProperty("--fc-event-text-color", theme.eventText);
   }
 
-  function makeEventSources(cfg) {
-    return Object.entries(cfg)
+  function makeEventSources(calendarsEffective) {
+    return Object.entries(calendarsEffective)
       .filter(([_, c]) => c && c.visible)
       .map(([calendarId, c]) => ({
         googleCalendarId: calendarId,
@@ -381,8 +398,66 @@
       }));
   }
 
+  // ========= state =========
+  let baseConfig = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} }; // config.json の内容
+  let overrides  = { theme: {}, calendars: {} };                       // localStorage の差分
+  let effective  = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} };// 合成後
+  let calendar = null;
+
+  function loadOverridesFromLS() {
+    try {
+      const raw = localStorage.getItem(LS_OVERRIDE_KEY);
+      if (!raw) return { theme: {}, calendars: {} };
+      const obj = JSON.parse(raw);
+      if (!isObj(obj)) return { theme: {}, calendars: {} };
+      return {
+        theme: isObj(obj.theme) ? obj.theme : {},
+        calendars: isObj(obj.calendars) ? obj.calendars : {}
+      };
+    } catch {
+      return { theme: {}, calendars: {} };
+    }
+  }
+
+  function saveOverridesToLS() {
+    // 何も差分がないなら保存しない（＝“操作してない”状態を維持）
+    const hasTheme = isObj(overrides.theme) && Object.keys(overrides.theme).length > 0;
+    const hasCals  = isObj(overrides.calendars) && Object.keys(overrides.calendars).length > 0;
+
+    if (!hasTheme && !hasCals) {
+      localStorage.removeItem(LS_OVERRIDE_KEY);
+      return;
+    }
+    localStorage.setItem(LS_OVERRIDE_KEY, JSON.stringify(overrides));
+  }
+
+  function recomputeEffective() {
+    effective.theme = mergeTheme(baseConfig.theme || PAGE_DEFAULT_THEME, overrides.theme);
+    effective.calendars = mergeCalendars(baseConfig.calendars || {}, overrides.calendars);
+  }
+
+  async function loadBaseConfigFromJson() {
+    try {
+      const res = await fetch(CONFIG_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`config.json fetch failed: ${res.status}`);
+      const data = await res.json();
+      baseConfig = {
+        theme: mergeTheme(PAGE_DEFAULT_THEME, isObj(data.theme) ? data.theme : {}),
+        calendars: isObj(data.calendars) ? data.calendars : {}
+      };
+      $("statusLine").textContent = "status: config.json 読み込みOK";
+      return true;
+    } catch (e) {
+      console.warn(e);
+      baseConfig = { theme: clone(PAGE_DEFAULT_THEME), calendars: {} };
+      $("statusLine").textContent = "status: config.json なし（ページ標準で起動）";
+      return false;
+    }
+  }
+
   function rebuildCalendar() {
-    applyThemeToRoot();
+    recomputeEffective();
+    applyThemeToRoot(effective.theme);
 
     const el = $("calendar");
     if (!el) return;
@@ -402,11 +477,11 @@
       slotMaxTime: "24:00:00",
 
       googleCalendarApiKey: GOOGLE_API_KEY,
-      eventSources: makeEventSources(CALENDAR_CONFIG),
+      eventSources: makeEventSources(effective.calendars),
 
       eventDidMount: (info) => {
         const calId = info.event.source?.googleCalendarId;
-        const cfg = CALENDAR_CONFIG[calId];
+        const cfg = effective.calendars[calId];
         if (!cfg) return;
 
         if (cfg.showTitle === false) {
@@ -427,37 +502,29 @@
     calendar.render();
   }
 
-  function syncThemeUI() {
-    $("tPageBg").value = THEME.pageBg;
-    $("tText").value = THEME.text;
-    $("tBorder").value = THEME.border;
-    $("tToday").value = THEME.today;
-    $("tTodayAlpha").value = THEME.todayAlpha;
-    $("tEventText").value = THEME.eventText;
-  }
-
-  // テーマ変更はdestroyしない（予定消えにくい）
-  function saveThemeAndApply() {
-    saveJSON(LS_THEME_KEY, THEME);
-    applyThemeToRoot();
-    if (calendar) calendar.updateSize();
+  function syncThemeUIFromEffective() {
+    $("tPageBg").value = effective.theme.pageBg;
+    $("tText").value = effective.theme.text;
+    $("tBorder").value = effective.theme.border;
+    $("tToday").value = effective.theme.today;
+    $("tTodayAlpha").value = effective.theme.todayAlpha;
+    $("tEventText").value = effective.theme.eventText;
   }
 
   function renderCalendarList() {
     const list = $("calList");
-    if (!list) return;
     list.innerHTML = "";
 
-    const entries = Object.entries(CALENDAR_CONFIG);
+    const entries = Object.entries(effective.calendars);
     if (entries.length === 0) {
       const div = document.createElement("div");
       div.className = "small";
-      div.textContent = "まだカレンダーがありません。上のフォームから追加。";
+      div.textContent = "config.json に calendars が無いか、まだ追加してない。";
       list.appendChild(div);
       return;
     }
 
-    for (const [id, cfg] of entries) {
+    for (const [id, cfgEff] of entries) {
       const item = document.createElement("div");
       item.className = "item";
 
@@ -477,7 +544,7 @@
 
       const color = document.createElement("input");
       color.type = "color";
-      color.value = cfg.color || "#2563eb";
+      color.value = cfgEff.color || "#2563eb";
       color.title = "色";
 
       const del = document.createElement("button");
@@ -493,16 +560,20 @@
       const checks = document.createElement("div");
       checks.className = "checks";
 
+      function setOverrideField(key, value) {
+        overrides.calendars[id] = Object.assign({}, overrides.calendars[id] || {}, { [key]: value });
+        saveOverridesToLS();
+        rebuildCalendar();
+        syncThemeUIFromEffective();
+        renderCalendarList();
+      }
+
       function addCheck(text, key) {
         const lab = document.createElement("label");
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        cb.checked = !!cfg[key];
-        cb.addEventListener("change", () => {
-          CALENDAR_CONFIG[id][key] = cb.checked;
-          saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-          rebuildCalendar();
-        });
+        cb.checked = !!cfgEff[key];
+        cb.addEventListener("change", () => setOverrideField(key, cb.checked));
         lab.appendChild(cb);
         lab.appendChild(document.createTextNode(text));
         checks.appendChild(lab);
@@ -523,28 +594,24 @@
 
       const labelInput = document.createElement("input");
       labelInput.type = "text";
-      labelInput.value = cfg.label ?? "予定あり";
-      labelInput.addEventListener("change", () => {
-        CALENDAR_CONFIG[id].label = labelInput.value;
-        saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-        rebuildCalendar();
-      });
+      labelInput.value = cfgEff.label ?? "予定あり";
+      labelInput.addEventListener("change", () => setOverrideField("label", labelInput.value));
 
       labelWrap.appendChild(labelCap);
       labelWrap.appendChild(labelInput);
       inline.appendChild(labelWrap);
 
       color.addEventListener("input", () => {
-        CALENDAR_CONFIG[id].color = color.value;
-        saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-        rebuildCalendar();
+        setOverrideField("color", color.value);
       });
 
       del.addEventListener("click", () => {
-        delete CALENDAR_CONFIG[id];
-        saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-        renderCalendarList();
+        // 削除は overrides に null を入れる（baseの分も消える）
+        overrides.calendars[id] = null;
+        saveOverridesToLS();
         rebuildCalendar();
+        syncThemeUIFromEffective();
+        renderCalendarList();
       });
 
       item.appendChild(top);
@@ -554,7 +621,7 @@
     }
   }
 
-  function normId(id) { return (id || "").trim(); }
+  function normId(id){ return (id || "").trim(); }
 
   function setDrawer(open) {
     $("drawer").classList.toggle("open", open);
@@ -564,7 +631,8 @@
 
   // Export
   function buildExportObject() {
-    return { theme: THEME, calendars: CALENDAR_CONFIG };
+    recomputeEffective();
+    return { theme: effective.theme, calendars: effective.calendars };
   }
   function setExportText() {
     const t = JSON.stringify(buildExportObject(), null, 2);
@@ -575,22 +643,61 @@
     $("exportArea").style.display = show ? "block" : "none";
   }
 
-  // ======================
-  // DOM ready: ここで全部登録
-  // ======================
+  // Theme overrides helpers
+  function setThemeOverride(key, value) {
+    overrides.theme = Object.assign({}, overrides.theme || {}, { [key]: value });
+    saveOverridesToLS();          // ← ここで初めてlocalStorageに保存される（操作したから）
+    rebuildCalendar();            // リアルタイム反映
+    syncThemeUIFromEffective();   // UIも追従
+    renderCalendarList();
+  }
+
+  async function initAll() {
+    overrides = loadOverridesFromLS();        // 差分があれば読み込む
+    await loadBaseConfigFromJson();           // まず config.json を基準として読む
+    rebuildCalendar();                        // base + overrides 合成で描画
+    syncThemeUIFromEffective();
+    renderCalendarList();
+    setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
+
+    const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+    $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     // Drawer
     $("btnToggle").addEventListener("click", () => setDrawer(!$("drawer").classList.contains("open")));
     $("btnClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
-    // Add calendar
+    // Theme controls (変更した瞬間から override 保存)
+    $("tPageBg").addEventListener("input", (e) => setThemeOverride("pageBg", e.target.value));
+    $("tText").addEventListener("input", (e) => setThemeOverride("text", e.target.value));
+    $("tBorder").addEventListener("input", (e) => setThemeOverride("border", e.target.value));
+    $("tToday").addEventListener("input", (e) => setThemeOverride("today", e.target.value));
+    $("tTodayAlpha").addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      const vv = isFinite(v) ? Math.max(0, Math.min(100, v)) : 35;
+      e.target.value = vv;
+      setThemeOverride("todayAlpha", vv);
+    });
+    $("tEventText").addEventListener("input", (e) => setThemeOverride("eventText", e.target.value));
+
+    $("btnThemeDefault").addEventListener("click", () => {
+      // “ページ標準”に戻す = theme override を空にする（baseは残る）
+      overrides.theme = {};
+      saveOverridesToLS();
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+    });
+
+    // Add calendar (追加 = overridesに書く)
     $("btnAdd").addEventListener("click", () => {
       const id = normId($("newCalId").value);
       if (!id) return alert("カレンダーIDが空。");
-      if (CALENDAR_CONFIG[id]) return alert("そのカレンダーIDは既に追加済み。");
 
-      CALENDAR_CONFIG[id] = {
+      overrides.calendars[id] = {
         visible: $("newVisible").checked,
         showTitle: $("newShowTitle").checked,
         showTime: $("newShowTime").checked,
@@ -598,54 +705,38 @@
         label: $("newLabel").value
       };
 
-      saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
+      saveOverridesToLS();
       $("newCalId").value = "";
-      renderCalendarList();
       rebuildCalendar();
-    });
-
-    // Theme inputs
-    $("tPageBg").addEventListener("input", (e) => { THEME.pageBg = e.target.value; saveThemeAndApply(); });
-    $("tText").addEventListener("input", (e) => { THEME.text = e.target.value; saveThemeAndApply(); });
-    $("tBorder").addEventListener("input", (e) => { THEME.border = e.target.value; saveThemeAndApply(); });
-    $("tToday").addEventListener("input", (e) => { THEME.today = e.target.value; saveThemeAndApply(); });
-    $("tTodayAlpha").addEventListener("change", (e) => {
-      const v = Number(e.target.value);
-      THEME.todayAlpha = isFinite(v) ? Math.max(0, Math.min(100, v)) : 35;
-      e.target.value = THEME.todayAlpha;
-      saveThemeAndApply();
-    });
-    $("tEventText").addEventListener("input", (e) => { THEME.eventText = e.target.value; saveThemeAndApply(); });
-
-    $("btnThemeDefault").addEventListener("click", () => {
-      THEME = structuredClone(DEFAULT_THEME);
-      saveJSON(LS_THEME_KEY, THEME);
-      syncThemeUI();
-      applyThemeToRoot();
-      if (calendar) calendar.updateSize();
-    });
-
-    // Reload / Reset
-    $("btnReload").addEventListener("click", () => {
-      CALENDAR_CONFIG = loadJSON(LS_CAL_KEY, DEFAULT_CAL_CONFIG);
-      THEME = loadJSON(LS_THEME_KEY, DEFAULT_THEME);
-      syncThemeUI();
+      syncThemeUIFromEffective();
       renderCalendarList();
-      rebuildCalendar();
     });
 
-    $("btnResetAll").addEventListener("click", () => {
-      if (!confirm("このブラウザの保存を全部消す？")) return;
-      localStorage.removeItem(LS_CAL_KEY);
-      localStorage.removeItem(LS_THEME_KEY);
-      CALENDAR_CONFIG = structuredClone(DEFAULT_CAL_CONFIG);
-      THEME = structuredClone(DEFAULT_THEME);
-      syncThemeUI();
+    // Reload config.json
+    $("btnReloadConfig").addEventListener("click", async () => {
+      await loadBaseConfigFromJson();
+      rebuildCalendar();
+      syncThemeUIFromEffective();
       renderCalendarList();
-      rebuildCalendar();
+
+      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+      $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
     });
 
-    // Export buttons
+    // Clear overrides (ローカル差分だけ消す → config.json基準に戻る)
+    $("btnClearOverrides").addEventListener("click", () => {
+      if (!confirm("ローカル差分を消して、config.json基準に戻す？")) return;
+      overrides = { theme: {}, calendars: {} };
+      localStorage.removeItem(LS_OVERRIDE_KEY);
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      renderCalendarList();
+
+      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
+      $("statusLine").textContent = ( $("statusLine").textContent.split(" / ")[0] ) + (hasLS ? " / local差分あり" : " / local差分なし");
+    });
+
+    // Export
     $("btnExportShow").addEventListener("click", () => {
       const area = $("exportArea");
       const willShow = area.style.display !== "block";
@@ -680,10 +771,7 @@
     });
 
     // init
-    syncThemeUI();
-    renderCalendarList();
-    rebuildCalendar();
-    setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
+    initAll();
   });
 </script>
 </body>
