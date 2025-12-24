@@ -29,6 +29,25 @@
       --fc-today-bg-color: rgba(255, 220, 40, 0.20);
       --fc-event-text-color: #ffffff;
       --fc-event-border-color: transparent;
+      /* ==== Fix: FullCalendar dark/blank display ==== */
+#calendar { background: transparent !important; padding: 0 !important; }
+.fc { height: 100% !important; background: var(--fc-page-bg-color) !important; border-radius: 14px; }
+.fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+  border-color: var(--fc-border-color) !important;
+}
+.fc .fc-timegrid-slot, .fc .fc-timegrid-col, .fc .fc-daygrid-day {
+  background: var(--fc-page-bg-color) !important;
+}
+.fc .fc-toolbar-title,
+.fc .fc-col-header-cell-cushion,
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  color: var(--fc-neutral-text-color) !important;
+}
+.fc .fc-button {
+  color: #fff !important;
+}
+
     }
 
     html,body{height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text);}
