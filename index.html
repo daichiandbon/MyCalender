@@ -12,8 +12,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
 
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; font-family: system-ui, sans-serif; }
-    #calendar { height: 100vh; padding: 12px; box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #calendar {
+      height: 100vh;
+      padding: 12px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
@@ -21,42 +30,97 @@
   <div id="calendar"></div>
 
   <script>
-    // ★ 1) Google Cloudで作ったAPIキーを入れる
+    // =========================
+    // Google API Key
+    // =========================
     const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
 
-    // ★ 2) 表示したいカレンダーIDを並べる（複数OK）
-    // 例: "xxxx@gmail.com" / "xxxx@group.calendar.google.com"
-    const CAL_IDS = [
-      "bonbonbon0105@gmail.com",
-      "ja.japanese#holiday@group.v.calendar.google.com" ,
-      "q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com",
-    ];
+    // =========================
+    // カレンダーごとの表示設定（ここだけ触ればOK）
+    // =========================
+    const CALENDAR_CONFIG = {
+      // メイン
+      "bonbonbon0105@gmail.com": {
+        visible: true,
+        showTitle: true,
+        showTime: true,
+      },
 
+      // 日々タスク
+      "q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com": {
+        visible: true,
+        showTitle: false,
+        showTime: false,
+        label: "予定あり", // タイトル非表示時に出す文言（空文字でもOK）
+      },
+
+      // 掲示板
+      "u0dm4646p2nrc4ms7k58jmut4s@group.calendar.google.com": {
+        visible: false,
+      },
+      
+    };
+
+    // =========================
+    // 表示する eventSources を自動生成
+    // =========================
+    const EVENT_SOURCES = Object.entries(CALENDAR_CONFIG)
+      .filter(([_, cfg]) => cfg.visible)
+      .map(([calendarId]) => ({
+        googleCalendarId: calendarId,
+      }));
+
+    // =========================
+    // FullCalendar 初期化
+    // =========================
     document.addEventListener("DOMContentLoaded", () => {
-      const cal = new FullCalendar.Calendar(document.getElementById("calendar"), {
-        initialView: "timeGridWeek",
-        headerToolbar: {
-          left: "prev,next today",
-          center: "title",
-          right: "timeGridWeek,dayGridMonth"
-        },
-        nowIndicator: true,
-        height: "100%",
-        expandRows: true,
-        slotMinTime: "06:00:00",
-        slotMaxTime: "24:00:00",
+      const calendar = new FullCalendar.Calendar(
+        document.getElementById("calendar"),
+        {
+          initialView: "timeGridWeek",
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "timeGridWeek,dayGridMonth",
+          },
+          nowIndicator: true,
+          height: "100%",
+          expandRows: true,
+          slotMinTime: "06:00:00",
+          slotMaxTime: "24:00:00",
 
-        // Google Calendar 設定
-        googleCalendarApiKey: GOOGLE_API_KEY,
-        eventSources: CAL_IDS.map(id => ({ googleCalendarId: id })),
+          // Google Calendar 設定
+          googleCalendarApiKey: GOOGLE_API_KEY,
+          eventSources: EVENT_SOURCES,
 
-        // エラーが出た時にConsoleで分かりやすくする
-        eventSourceFailure: (err) => {
-          console.error("Google Calendar fetch failed:", err);
+          // =========================
+          // 描画時にカレンダー設定を反映
+          // =========================
+          eventDidMount: (info) => {
+            const calId = info.event.source?.googleCalendarId;
+            const cfg = CALENDAR_CONFIG[calId];
+            if (!cfg) return;
+
+            // タイトル制御
+            if (cfg.showTitle === false) {
+              const titleEl = info.el.querySelector(".fc-event-title");
+              if (titleEl) {
+                titleEl.textContent = cfg.label ?? "";
+              }
+            }
+
+            // 時間表示制御
+            if (cfg.showTime === false) {
+              const timeEl = info.el.querySelector(".fc-event-time");
+              if (timeEl) {
+                timeEl.textContent = "";
+              }
+            }
+          },
         }
-      });
+      );
 
-      cal.render();
+      calendar.render();
     });
   </script>
 </body>
