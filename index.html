@@ -3,7 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- FullCalendar core -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+  <!-- ★ ICSを読むためのプラグイン（これが必須） -->
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6.1.11/index.global.min.js"></script>
+
   <style>
     html, body { margin:0; padding:0; height:100%; font-family: system-ui, sans-serif; }
     #calendar { height:100vh; padding:12px; box-sizing:border-box; }
@@ -13,7 +20,7 @@
   <div id="calendar"></div>
 
   <script>
-    // ★ここに自分のICS URLを入れる
+    // ★あなたの公開ICS URL
     const ICS_URL = "https://calendar.google.com/calendar/ical/bonbonbon0105%40gmail.com/public/basic.ics";
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -24,8 +31,16 @@
         expandRows: true,
         slotMinTime: "06:00:00",
         slotMaxTime: "24:00:00",
-        events: ICS_URL
+
+        // ★ここがポイント：events じゃなく eventSources で format:'ics'
+        eventSources: [
+          {
+            url: ICS_URL,
+            format: "ics"
+          }
+        ]
       });
+
       cal.render();
     });
   </script>
