@@ -298,8 +298,8 @@
 
       <div class="checks">
         <label><input type="checkbox" id="newVisible" checked>表示</label>
-        <label><input type="checkbox" id="newShowTitle">タイトル表示</label>
-        <label><input type="checkbox" id="newShowTime">時間表示</label>
+        <label><input type="checkbox" id="newShowTitle" checked>タイトル表示</label>
+        <label><input type="checkbox" id="newShowTime" checked>時間表示</label>
       </div>
 
       <div class="row" style="justify-content:flex-end; margin-top:8px;">
@@ -339,12 +339,9 @@
   };
 
   const $ = (id) => document.getElementById(id);
+  const clone = (obj) => structuredClone(obj);
+  const isObj = (x) => x && typeof x === "object" && !Array.isArray(x);
 
-  function clone(obj){ return structuredClone(obj); }
-
-  function isObj(x){ return x && typeof x === "object" && !Array.isArray(x); }
-
-  // shallow merge for theme, deep-ish for calendars
   function mergeTheme(base, over){
     const out = clone(base);
     if (isObj(over)) Object.assign(out, over);
@@ -355,8 +352,6 @@
     const out = clone(base);
     if (!isObj(over)) return out;
 
-    // over のキーを反映（追加/上書き/削除）
-    // 削除は { id: null } で表現
     for (const [id, v] of Object.entries(over)) {
       if (v === null) {
         delete out[id];
@@ -389,10 +384,12 @@
     root.setProperty("--fc-event-text-color", theme.eventText);
   }
 
+  // ★修正：event.source.id に calendarId を入れて、確実に識別できるようにする
   function makeEventSources(calendarsEffective) {
     return Object.entries(calendarsEffective)
       .filter(([_, c]) => c && c.visible)
       .map(([calendarId, c]) => ({
+        id: calendarId,              // ★重要
         googleCalendarId: calendarId,
         color: c.color || undefined
       }));
@@ -468,7 +465,6 @@
 
     calendar = new FullCalendar.Calendar(el, {
       firstDay: 1, // ★ 月曜始まり
-
       initialView: "timeGridWeek",
       headerToolbar: { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" },
       nowIndicator: true,
@@ -481,18 +477,18 @@
       eventSources: makeEventSources(effective.calendars),
 
       eventDidMount: (info) => {
-        const calId = info.event.source?.googleCalendarId;
+        // ★修正：確実に source.id からカレンダーIDを取る
+        const calId = info.event.source?.id;
         const cfg = effective.calendars?.[calId];
         if (!cfg) return;
 
-        // タイトル制御：showTitle が明示的に false のときだけ隠してラベルに置換
+        // タイトル制御：showTitle が false のときに隠してラベルに置換
         if (cfg.showTitle === false) {
           const label = (cfg.label ?? "").trim();
 
           const titleEls = info.el.querySelectorAll(
             ".fc-event-title, .fc-event-title-container, .fc-list-event-title"
           );
-
           titleEls.forEach(el => { el.textContent = ""; });
 
           if (label) {
@@ -506,7 +502,7 @@
           }
         }
 
-        // 時間表示制御
+        // 時間表示制御：showTime が false のときに消す
         if (cfg.showTime === false) {
           const timeEls = info.el.querySelectorAll(".fc-event-time, .fc-list-event-time");
           timeEls.forEach(el => { el.textContent = ""; });
@@ -591,7 +587,8 @@
         const lab = document.createElement("label");
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        cb.checked = !!cfgEff[key];
+        // ★修正：未指定(undefined)は“表示する”扱い（true）
+        cb.checked = (cfgEff[key] !== false);
         cb.addEventListener("change", () => setOverrideField(key, cb.checked));
         lab.appendChild(cb);
         lab.appendChild(document.createTextNode(text));
