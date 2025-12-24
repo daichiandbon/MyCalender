@@ -26,6 +26,13 @@
       "showTime": true,
       "color": "#2563eb",
       "label": "予定あり"
+    },
+    "q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com": {
+      "visible": true,
+      "showTitle": true,
+      "showTime": true,
+      "color": "#687287",
+      "label": "予定あり"
     }
   }
 }
