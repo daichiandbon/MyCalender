@@ -12,121 +12,399 @@
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    :root{
+      --bg:#0b0f14; --panel:#111827; --panel2:#0f172a; --text:#e5e7eb;
+      --muted:#94a3b8; --border:#1f2937; --btn:#1f2937; --btn2:#0b1220;
+      --ok:#10b981; --bad:#ef4444;
     }
-    #calendar {
-      height: 100vh;
-      padding: 12px;
-      box-sizing: border-box;
+    html,body{height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text);}
+    .wrap{display:grid; grid-template-columns: 360px 1fr; height:100vh;}
+    .side{
+      border-right:1px solid var(--border);
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      padding:14px;
+      overflow:auto;
     }
+    .main{padding:10px;}
+    #calendar{height: calc(100vh - 20px); background:#fff; border-radius:14px; padding:10px; box-sizing:border-box;}
+    h1{font-size:16px; margin:0 0 10px; letter-spacing:.3px;}
+    .small{font-size:12px; color:var(--muted);}
+    .card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      margin:10px 0;
+      background:rgba(255,255,255,0.03);
+    }
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    label{font-size:12px; color:var(--muted);}
+    input[type="text"]{
+      width:100%;
+      background:#0b1220;
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      outline:none;
+    }
+    input[type="color"]{width:44px; height:30px; border:none; background:transparent; padding:0;}
+    .btn{
+      background:var(--btn);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .btn:hover{filter:brightness(1.1);}
+    .btn.ok{border-color:#064e3b; background:rgba(16,185,129,.15);}
+    .btn.bad{border-color:#7f1d1d; background:rgba(239,68,68,.12);}
+    .list{display:flex; flex-direction:column; gap:10px;}
+    .item{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      background:rgba(0,0,0,0.15);
+    }
+    .itemTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
+    .id{font-size:12px; color:var(--text); word-break:break-all; line-height:1.2;}
+    .tag{font-size:11px; color:var(--muted);}
+    .checks{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+    .checks label{display:flex; gap:6px; align-items:center; color:var(--text); font-size:12px;}
+    .checks input{transform: translateY(1px);}
+    .inline{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+    .inline input[type="text"]{width:auto; flex:1; min-width:160px;}
+    .hr{height:1px; background:var(--border); margin:10px 0;}
+    .note{font-size:12px; color:var(--muted); line-height:1.4;}
   </style>
 </head>
 
 <body>
-  <div id="calendar"></div>
+<div class="wrap">
+  <aside class="side">
+    <h1>MyCalendar 設定</h1>
+    <div class="small">カレンダー追加 / 表示制御 / 色設定。設定はこのブラウザに保存。</div>
 
-  <script>
-    // =========================
-    // Google API Key
-    // =========================
-    const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div class="small">APIキーはコード内で設定（UIからは変更しない）</div>
+        <button class="btn" id="btnReload">再読み込み</button>
+      </div>
+      <div class="hr"></div>
+      <div class="note">
+        ※ 予定タイトルを“データとして隠す”ことはできない（画面上で消すだけ）。<br>
+        ※ 公開カレンダー前提。非公開を読むならOAuthが必要。
+      </div>
+    </div>
 
-    // =========================
-    // カレンダーごとの表示設定（ここだけ触ればOK）
-    // =========================
-    const CALENDAR_CONFIG = {
-      // メイン
-      "bonbonbon0105@gmail.com": {
-        visible: true,
-        showTitle: true,
-        showTime: true,
-        color: "#2563eb",
+    <div class="card">
+      <div class="row"><label>カレンダーID（gmail / @group.calendar.google.com）</label></div>
+      <input type="text" id="newCalId" placeholder="例: xxxx@group.calendar.google.com" />
+      <div class="inline">
+        <div>
+          <label>色</label><br>
+          <input type="color" id="newColor" value="#2563eb">
+        </div>
+        <div style="flex:1;">
+          <label>タイトル非表示時ラベル</label>
+          <input type="text" id="newLabel" placeholder="例: 予定あり（空でもOK）" value="予定あり">
+        </div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="newVisible" checked>表示</label>
+        <label><input type="checkbox" id="newShowTitle">タイトル表示</label>
+        <label><input type="checkbox" id="newShowTime">時間表示</label>
+      </div>
+      <div class="row" style="justify-content:flex-end; margin-top:8px;">
+        <button class="btn ok" id="btnAdd">＋ 追加</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;">登録カレンダー</div>
+          <div class="small">ここでON/OFF・色・表示ルールを変更</div>
+        </div>
+        <button class="btn bad" id="btnReset">全消し</button>
+      </div>
+      <div class="hr"></div>
+      <div class="list" id="calList"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="calendar"></div>
+  </main>
+</div>
+
+<script>
+  // ==========
+  // ★ここだけ必ず設定
+  // ==========
+  const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
+
+  // ==========
+  // Storage
+  // ==========
+  const LS_KEY = "mycalendar.calendarConfig.v1";
+
+  // デフォルト（初回だけ）
+  const DEFAULT_CONFIG = {
+    // "ja.japanese#holiday@group.v.calendar.google.com": {
+    //   visible: true, showTitle: true, showTime: true, label: "", color: "#16a34a"
+    // }
+  };
+
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return structuredClone(DEFAULT_CONFIG);
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return structuredClone(DEFAULT_CONFIG);
+      return parsed;
+    } catch {
+      return structuredClone(DEFAULT_CONFIG);
+    }
+  }
+
+  function saveConfig(cfg) {
+    localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+  }
+
+  // ==========
+  // App state
+  // ==========
+  let CALENDAR_CONFIG = loadConfig();
+  let calendar = null;
+
+  // ==========
+  // Helpers
+  // ==========
+  function normId(id) {
+    return (id || "").trim();
+  }
+
+  function makeEventSources(cfg) {
+    return Object.entries(cfg)
+      .filter(([_, c]) => c && c.visible)
+      .map(([calendarId, c]) => ({
+        googleCalendarId: calendarId,
+        color: c.color || undefined
+      }));
+  }
+
+  function rebuildCalendar() {
+    const el = document.getElementById("calendar");
+    if (calendar) {
+      calendar.destroy();
+      calendar = null;
+    }
+
+    calendar = new FullCalendar.Calendar(el, {
+      initialView: "timeGridWeek",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "timeGridWeek,dayGridMonth"
+      },
+      nowIndicator: true,
+      height: "100%",
+      expandRows: true,
+      slotMinTime: "06:00:00",
+      slotMaxTime: "24:00:00",
+
+      googleCalendarApiKey: GOOGLE_API_KEY,
+      eventSources: makeEventSources(CALENDAR_CONFIG),
+
+      eventDidMount: (info) => {
+        const calId = info.event.source?.googleCalendarId;
+        const cfg = CALENDAR_CONFIG[calId];
+        if (!cfg) return;
+
+        // タイトル表示制御（画面上だけ）
+        if (cfg.showTitle === false) {
+          const titleEl = info.el.querySelector(".fc-event-title");
+          if (titleEl) titleEl.textContent = cfg.label ?? "";
+        }
+
+        // 時間表示制御（画面上だけ）
+        if (cfg.showTime === false) {
+          const timeEl = info.el.querySelector(".fc-event-time");
+          if (timeEl) timeEl.textContent = "";
+        }
       },
 
-      // 日々タスク
-      "q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com": {
-        visible: true,
-        showTitle: false,
-        showTime: false,
-        label: "予定あり",
-        color: "#b9b885",
-      },
+      eventSourceFailure: (err) => {
+        console.error("Google Calendar fetch failed:", err);
+      }
+    });
 
-      // 掲示板
-      "u0dm4646p2nrc4ms7k58jmut4s@group.calendar.google.com": {
-        visible: true,
-        showTitle: false,
-        showTime: false,
-        label: "予定あり",
-      },
-      
+    calendar.render();
+  }
+
+  function renderList() {
+    const list = document.getElementById("calList");
+    list.innerHTML = "";
+
+    const entries = Object.entries(CALENDAR_CONFIG);
+    if (entries.length === 0) {
+      const div = document.createElement("div");
+      div.className = "small";
+      div.textContent = "まだカレンダーがありません。上のフォームから追加。";
+      list.appendChild(div);
+      return;
+    }
+
+    for (const [id, cfg] of entries) {
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const top = document.createElement("div");
+      top.className = "itemTop";
+
+      const left = document.createElement("div");
+      left.style.flex = "1";
+
+      const idEl = document.createElement("div");
+      idEl.className = "id";
+      idEl.textContent = id;
+
+      const tag = document.createElement("div");
+      tag.className = "tag";
+      tag.textContent = "設定：visible / title / time / color / label";
+
+      left.appendChild(idEl);
+      left.appendChild(tag);
+
+      const right = document.createElement("div");
+      right.className = "row";
+      right.style.alignItems = "center";
+
+      const color = document.createElement("input");
+      color.type = "color";
+      color.value = cfg.color || "#2563eb";
+      color.title = "色";
+      color.addEventListener("input", () => {
+        CALENDAR_CONFIG[id].color = color.value;
+        saveConfig(CALENDAR_CONFIG);
+        rebuildCalendar();
+      });
+
+      const del = document.createElement("button");
+      del.className = "btn bad";
+      del.textContent = "削除";
+      del.addEventListener("click", () => {
+        delete CALENDAR_CONFIG[id];
+        saveConfig(CALENDAR_CONFIG);
+        renderList();
+        rebuildCalendar();
+      });
+
+      right.appendChild(color);
+      right.appendChild(del);
+
+      top.appendChild(left);
+      top.appendChild(right);
+
+      const checks = document.createElement("div");
+      checks.className = "checks";
+
+      const mkCheck = (labelText, key) => {
+        const lab = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!cfg[key];
+        cb.addEventListener("change", () => {
+          CALENDAR_CONFIG[id][key] = cb.checked;
+          saveConfig(CALENDAR_CONFIG);
+          rebuildCalendar();
+        });
+        lab.appendChild(cb);
+        lab.appendChild(document.createTextNode(labelText));
+        return lab;
+      };
+
+      checks.appendChild(mkCheck("表示", "visible"));
+      checks.appendChild(mkCheck("タイトル表示", "showTitle"));
+      checks.appendChild(mkCheck("時間表示", "showTime"));
+
+      const inline = document.createElement("div");
+      inline.className = "inline";
+
+      const labelWrap = document.createElement("div");
+      labelWrap.style.flex = "1";
+      const labelCap = document.createElement("label");
+      labelCap.textContent = "タイトル非表示時ラベル";
+      const labelInput = document.createElement("input");
+      labelInput.type = "text";
+      labelInput.value = cfg.label ?? "予定あり";
+      labelInput.addEventListener("change", () => {
+        CALENDAR_CONFIG[id].label = labelInput.value;
+        saveConfig(CALENDAR_CONFIG);
+        rebuildCalendar();
+      });
+      labelWrap.appendChild(labelCap);
+      labelWrap.appendChild(labelInput);
+
+      inline.appendChild(labelWrap);
+
+      item.appendChild(top);
+      item.appendChild(checks);
+      item.appendChild(inline);
+
+      list.appendChild(item);
+    }
+  }
+
+  // ==========
+  // UI events
+  // ==========
+  document.getElementById("btnAdd").addEventListener("click", () => {
+    const id = normId(document.getElementById("newCalId").value);
+    if (!id) return alert("カレンダーIDが空。");
+
+    if (CALENDAR_CONFIG[id]) {
+      return alert("そのカレンダーIDは既に追加済み。");
+    }
+
+    const cfg = {
+      visible: document.getElementById("newVisible").checked,
+      showTitle: document.getElementById("newShowTitle").checked,
+      showTime: document.getElementById("newShowTime").checked,
+      color: document.getElementById("newColor").value,
+      label: document.getElementById("newLabel").value
     };
 
-    // =========================
-    // 表示する eventSources を自動生成
-    // =========================
-    const EVENT_SOURCES = Object.entries(CALENDAR_CONFIG)
-      .filter(([_, cfg]) => cfg.visible)
-      .map(([calendarId]) => ({
-        googleCalendarId: calendarId,
-      }));
+    CALENDAR_CONFIG[id] = cfg;
+    saveConfig(CALENDAR_CONFIG);
 
-    // =========================
-    // FullCalendar 初期化
-    // =========================
-    document.addEventListener("DOMContentLoaded", () => {
-      const calendar = new FullCalendar.Calendar(
-        document.getElementById("calendar"),
-        {
-          initialView: "timeGridWeek",
-          headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "timeGridWeek,dayGridMonth",
-          },
-          nowIndicator: true,
-          height: "100%",
-          expandRows: true,
-          slotMinTime: "06:00:00",
-          slotMaxTime: "24:00:00",
+    document.getElementById("newCalId").value = "";
 
-          // Google Calendar 設定
-          googleCalendarApiKey: GOOGLE_API_KEY,
-          eventSources: EVENT_SOURCES,
+    renderList();
+    rebuildCalendar();
+  });
 
-          // =========================
-          // 描画時にカレンダー設定を反映
-          // =========================
-          eventDidMount: (info) => {
-            const calId = info.event.source?.googleCalendarId;
-            const cfg = CALENDAR_CONFIG[calId];
-            if (!cfg) return;
+  document.getElementById("btnReset").addEventListener("click", () => {
+    if (!confirm("全部消す？（元に戻せない）")) return;
+    CALENDAR_CONFIG = {};
+    saveConfig(CALENDAR_CONFIG);
+    renderList();
+    rebuildCalendar();
+  });
 
-            // タイトル制御
-            if (cfg.showTitle === false) {
-              const titleEl = info.el.querySelector(".fc-event-title");
-              if (titleEl) {
-                titleEl.textContent = cfg.label ?? "";
-              }
-            }
+  document.getElementById("btnReload").addEventListener("click", () => {
+    CALENDAR_CONFIG = loadConfig();
+    renderList();
+    rebuildCalendar();
+  });
 
-            // 時間表示制御
-            if (cfg.showTime === false) {
-              const timeEl = info.el.querySelector(".fc-event-time");
-              if (timeEl) {
-                timeEl.textContent = "";
-              }
-            }
-          },
-        }
-      );
-
-      calendar.render();
-    });
-  </script>
+  // ==========
+  // init
+  // ==========
+  renderList();
+  rebuildCalendar();
+</script>
 </body>
 </html>
