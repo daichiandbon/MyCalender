@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <style>
+    html, body { margin:0; padding:0; height:100%; font-family: system-ui, sans-serif; }
+    #calendar { height:100vh; padding:12px; box-sizing:border-box; }
+  </style>
+</head>
+<body>
+  <div id="calendar"></div>
+
+  <script>
+    // ★ここに自分のICS URLを入れる
+    const ICS_URL = "https://calendar.google.com/calendar/ical/bonbonbon0105%40gmail.com/public/basic.ics";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const cal = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        initialView: "timeGridWeek",
+        nowIndicator: true,
+        height: "100%",
+        expandRows: true,
+        slotMinTime: "06:00:00",
+        slotMaxTime: "24:00:00",
+        events: ICS_URL
+      });
+      cal.render();
+    });
+  </script>
+</body>
+</html>
