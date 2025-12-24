@@ -39,20 +39,23 @@
       color:var(--text);
     }
 
-    /* Top-right toggle button */
+    /* ===== 設定ボタン（右下） ===== */
     .toggleBtn{
       position:fixed;
-      top:10px;
-      right:10px;
+      right:12px;
+      bottom:12px;        /* ←右下 */
+      top:auto;           /* ←上を無効 */
       z-index: 9999;
-      padding:8px 12px;
-      border-radius:10px;
+
+      padding:10px 14px;
+      border-radius:12px;
       border:1px solid var(--border);
-      background:rgba(17,24,39,0.92);
+      background:#0b1220; /* 透けない */
       color:var(--text);
       cursor:pointer;
       font-size:12px;
-      backdrop-filter: blur(6px);
+
+      box-shadow: 0 12px 30px rgba(0,0,0,.45); /* 下の罫線を殺す */
     }
     .toggleBtn:hover{filter:brightness(1.08);}
 
@@ -177,11 +180,25 @@
     .fc .fc-event{
       color: var(--fc-event-text-color) !important;
     }
+
+    /* ===== 追加: 縦罫線を強制 ===== */
+    .fc .fc-timegrid-col,
+    .fc .fc-daygrid-day{
+      border-right: 1px solid var(--fc-border-color) !important;
+    }
+    .fc .fc-scrollgrid-section-body td{
+      border-right: 1px solid var(--fc-border-color) !important;
+    }
+
+    /* ===== 追加: 今日の強調を確実に ===== */
+    .fc .fc-day-today{
+      background: var(--fc-today-bg-color) !important;
+    }
   </style>
 </head>
 
 <body>
-  <!-- Top-right button -->
+  <!-- 設定ボタン -->
   <button class="toggleBtn" id="btnToggle">設定</button>
 
   <!-- Overlay -->
@@ -493,7 +510,7 @@
         cb.addEventListener("change", () => {
           CALENDAR_CONFIG[id][key] = cb.checked;
           saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-          rebuildCalendar();
+          rebuildCalendar(); // ← sources変わるので再構築でOK
         });
         lab.appendChild(cb);
         lab.appendChild(document.createTextNode(text));
@@ -529,7 +546,7 @@
       color.addEventListener("input", () => {
         CALENDAR_CONFIG[id].color = color.value;
         saveJSON(LS_CAL_KEY, CALENDAR_CONFIG);
-        rebuildCalendar();
+        rebuildCalendar(); // ←色だけなら refresh でもいいが、確実優先
       });
 
       del.addEventListener("click", () => {
@@ -589,9 +606,11 @@
     tEventText.value = THEME.eventText;
   }
 
+  // ★★★ 修正：テーマ変更は destroy/rebuild しない（=予定が消えない） ★★★
   function saveThemeAndApply() {
     saveJSON(LS_THEME_KEY, THEME);
-    rebuildCalendar();
+    applyThemeToRoot();
+    if (calendar) calendar.updateSize();
   }
 
   tPageBg.addEventListener("input", () => { THEME.pageBg = tPageBg.value; saveThemeAndApply(); });
@@ -610,7 +629,8 @@
     THEME = structuredClone(DEFAULT_THEME);
     saveJSON(LS_THEME_KEY, THEME);
     syncThemeUI();
-    rebuildCalendar();
+    applyThemeToRoot();
+    if (calendar) calendar.updateSize();
   });
 
   // ==========
@@ -656,6 +676,9 @@
   // ==========
   // init
   // ==========
+  if (!GOOGLE_API_KEY || GOOGLE_API_KEY === "YOUR_API_KEY") {
+    console.warn("Google API Key が設定されていません");
+  }
   syncThemeUI();
   renderCalendarList();
   rebuildCalendar();
