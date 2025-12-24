@@ -21,6 +21,7 @@
       --border:#1f2937;
       --btn:#1f2937;
 
+      /* FullCalendar theme vars (we override via JS on :root) */
       --fc-page-bg-color:#ffffff;
       --fc-neutral-bg-color:#f3f4f6;
       --fc-neutral-text-color:#374151;
@@ -185,6 +186,13 @@
     /* 今日の強調（見えない問題対策） */
     .fc .fc-day-today{
       background:var(--fc-today-bg-color) !important;
+    }
+
+    /* ラベルが枠内で綺麗に収まるように */
+    .fc .fc-event-title{
+      white-space: normal !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
@@ -384,12 +392,11 @@
     root.setProperty("--fc-event-text-color", theme.eventText);
   }
 
-  // ★修正：event.source.id に calendarId を入れて、確実に識別できるようにする
   function makeEventSources(calendarsEffective) {
     return Object.entries(calendarsEffective)
       .filter(([_, c]) => c && c.visible)
       .map(([calendarId, c]) => ({
-        id: calendarId,              // ★重要
+        id: calendarId,              // ★重要：source.id に必ず入る
         googleCalendarId: calendarId,
         color: c.color || undefined
       }));
@@ -477,32 +484,42 @@
       eventSources: makeEventSources(effective.calendars),
 
       eventDidMount: (info) => {
-        // ★修正：確実に source.id からカレンダーIDを取る
+        // ★確実に source.id からカレンダーIDを取る
         const calId = info.event.source?.id;
         const cfg = effective.calendars?.[calId];
         if (!cfg) return;
 
-        // タイトル制御：showTitle が false のときに隠してラベルに置換
+        // タイトル制御：showTitle=false のとき、枠内の title 部分を label に差し替える
         if (cfg.showTitle === false) {
           const label = (cfg.label ?? "").trim();
 
-          const titleEls = info.el.querySelectorAll(
-            ".fc-event-title, .fc-event-title-container, .fc-list-event-title"
-          );
-          titleEls.forEach(el => { el.textContent = ""; });
+          // 1) まず “正しい場所” の title 要素を掴む
+          let titleEl =
+            info.el.querySelector(".fc-event-title") ||
+            info.el.querySelector(".fc-list-event-title");
 
-          if (label) {
-            let target = info.el.querySelector(".fc-event-title");
-            if (!target) {
-              target = document.createElement("div");
-              target.className = "fc-event-title";
-              info.el.appendChild(target);
-            }
-            target.textContent = label;
+          if (titleEl) {
+            titleEl.textContent = label;
+          } else {
+            // 2) 無い場合は、イベント枠 “内” の main-frame に作る（外に出さない）
+            const frame =
+              info.el.querySelector(".fc-event-main-frame") ||
+              info.el.querySelector(".fc-event-main") ||
+              info.el;
+
+            const container = document.createElement("div");
+            container.className = "fc-event-title-container";
+
+            titleEl = document.createElement("div");
+            titleEl.className = "fc-event-title";
+            titleEl.textContent = label;
+
+            container.appendChild(titleEl);
+            frame.appendChild(container);
           }
         }
 
-        // 時間表示制御：showTime が false のときに消す
+        // 時間表示制御：showTime=false のときに消す
         if (cfg.showTime === false) {
           const timeEls = info.el.querySelectorAll(".fc-event-time, .fc-list-event-time");
           timeEls.forEach(el => { el.textContent = ""; });
@@ -587,7 +604,7 @@
         const lab = document.createElement("label");
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        // ★修正：未指定(undefined)は“表示する”扱い（true）
+        // ★未指定(undefined)は “表示する” 扱い
         cb.checked = (cfgEff[key] !== false);
         cb.addEventListener("change", () => setOverrideField(key, cb.checked));
         lab.appendChild(cb);
