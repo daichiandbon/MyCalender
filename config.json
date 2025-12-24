@@ -12,6 +12,10 @@
     "altA": "#ffffff",
     "altB": "#ffffff"
   },
+  "view": {
+    "slotMin": "08:00:00",
+    "slotMax": "23:59:00"
+  },
   "calendars": {
     "bonbonbon0105@gmail.com": {
       "visible": true,
