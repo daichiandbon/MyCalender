@@ -1,39 +1,31 @@
 {
-  "version": 1,
-  "firstDay": 1,
-  "googleApiKey": "AIza....",
   "theme": {
+    "pageBgA": "#0b0f14",
+    "pageBgB": "#000000",
+    "text": "#e5e7eb",
+    "border": "#1f2937",
+    "today": "#c875ff",
+    "todayAlpha": 35,
+    "eventText": "#ffffff",
     "bg": "#0b0f14",
     "panel": "#111827",
-    "border": "#1f2937",
-    "today": "#ffd82a",
     "altA": "#ffffff",
     "altB": "#ffffff"
   },
-  "calendars": [
-    {
-      "id": "ics_public",
-      "type": "ics",
-      "name": "公開（ICS）",
-      "url": "https://calendar.google.com/calendar/ical/xxxx%40gmail.com/public/basic.ics",
-      "visible": true,
-      "showTitle": false,
-      "showTime": false,
-      "label": "予定あり",
-      "color": "#64748b",
-      "textColor": "#ffffff"
-    },
-    {
-      "id": "google_main",
-      "type": "google",
-      "name": "メイン（Google API）",
-      "calendarId": "bonbonbon0105@gmail.com",
+  "calendars": {
+    "bonbonbon0105@gmail.com": {
       "visible": true,
       "showTitle": true,
       "showTime": true,
-      "label": "予定あり",
+      "color": "#8724eb",
+      "label": "予定あり"
+    },
+    "sugimoto@shirogumi.co.jp": {
+      "visible": true,
+      "showTitle": true,
+      "showTime": true,
       "color": "#2563eb",
-      "textColor": "#ffffff"
+      "label": "予定あり"
     }
-  ]
+  }
 }
