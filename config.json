@@ -1,12 +1,12 @@
 {
   "theme": {
-    "pageBgA": "#0b0f14",
+    "pageBgA": "#000000",
     "pageBgB": "#000000",
-    "text": "#e5e7eb",
     "border": "#1f2937",
     "today": "#c875ff",
     "todayAlpha": 35,
     "eventText": "#ffffff",
+    "text": "#e5e7eb",
     "bg": "#0b0f14",
     "panel": "#111827",
     "altA": "#ffffff",
@@ -15,6 +15,10 @@
   "view": {
     "slotMin": "08:00:00",
     "slotMax": "23:59:00"
+  },
+  "nav": {
+    "viewMode": "timeGridWeek",
+    "weekdayLang": "ja"
   },
   "calendars": {
     "bonbonbon0105@gmail.com": {
