@@ -25,11 +25,11 @@
       /* 追加：設定UIの入力背景（JSで背景Aに上書き） */
       --input-bg:#0b1220;
 
+      /* ★追加：設定UIのカード枠線（JSで背景Aから自動生成） */
+      --settings-border:#94a3b8;
+
       /* 設定アイコン（SVG URLをJSで入れる） */
       --settings-icon-url: none;
-
-      /* ★追加：設定アイコンの色（黒SVGを反転させるか） */
-      --settings-icon-filter: invert(0);
 
       /* FullCalendar vars（JSで上書きされる） */
       --fc-page-bg-color:#ffffff;          /* 互換用（使わない） */
@@ -71,7 +71,10 @@
       max-width:calc(100vw - 20px);
       transform:translateX(110%);
       transition:transform 180ms ease;
-      border-left:1px solid var(--border);
+
+      /* ★設定の枠線は settings-border を使う */
+      border-left:1px solid var(--settings-border);
+
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       padding:14px;
       box-sizing:border-box;
@@ -173,8 +176,11 @@
 
     h1{font-size:16px; margin:0 0 10px;}
     .small{font-size:12px; color:var(--muted); line-height:1.35;}
+
     .card{
-      border:1px solid var(--border);
+      /* ★設定の枠線は settings-border を使う */
+      border:1px solid var(--settings-border);
+
       border-radius:12px;
       padding:10px;
       margin:10px 0;
@@ -221,7 +227,15 @@
     .btn.ghost{background:transparent;}
 
     .list{display:flex; flex-direction:column; gap:10px;}
-    .item{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(0,0,0,.15);}
+
+    .item{
+      /* ★設定の枠線は settings-border を使う */
+      border:1px solid var(--settings-border);
+
+      border-radius:12px;
+      padding:10px;
+      background:rgba(0,0,0,.15);
+    }
     .itemTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
     .id{font-size:12px; color:var(--text); word-break:break-all; line-height:1.2;}
     .checks{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
@@ -351,9 +365,7 @@
       background-size:contain;
       opacity:.95;
       pointer-events:none;
-
-      /* ★追加：背景が暗い時は白く（invert） */
-      filter: var(--settings-icon-filter);
+      filter: var(--settings-icon-filter, none);
     }
   </style>
 </head>
@@ -427,10 +439,6 @@
             <option value="en">English</option>
           </select>
         </div>
-      </div>
-
-      <div class="small" style="margin-top:8px;">
-        ※この設定は Export に含まれます（config.jsonで他デバイスへ持ち運べる）。
       </div>
     </div>
 
@@ -584,8 +592,8 @@
   const LS_DRAWER_KEY   = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY  = "mycalendar.add.open";
 
-  // ★navをconfig.jsonに含める（デバイス間持ち運び用）
-  const PAGE_DEFAULT_NAV = { viewMode: "timeGridWeek", weekdayLang: "ja" };
+  // 表示/言語（config.jsonにも保存）
+  const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
 
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
 
@@ -683,11 +691,6 @@
     if (isObj(over)) Object.assign(out, over);
     return normalizeView(out);
   }
-  function mergeNav(base, over){
-    const out = clone(base);
-    if (isObj(over)) Object.assign(out, over);
-    return normalizeNav(out);
-  }
   function mergeCalendars(base, over){
     const out = clone(base);
     if (!isObj(over)) return out;
@@ -698,8 +701,13 @@
     }
     return out;
   }
+  function mergeNav(base, over){
+    const out = clone(base);
+    if (isObj(over)) Object.assign(out, over);
+    return normalizeNav(out);
+  }
 
-  // ★背景A/BからUI色を自動生成 + textは反対色（ただしイベント文字は手動）
+  // ★背景A/BからUI色を自動生成 + textは反対（ただしイベント文字は手動）
   function applyThemeToRoot(theme) {
     const root = document.documentElement.style;
 
@@ -746,13 +754,20 @@
     const muted = mixHex(textAuto, theme.pageBgA, 0.55);
     root.setProperty("--muted", muted);
 
-    // FullCalendarの軸や見出し文字色もこれに寄せる（イベント文字は別）
+    // FullCalendarの軸や見出し文字色も寄せる（イベント文字は別）
     root.setProperty("--fc-neutral-text-color", textAuto);
 
-    // ★設定アイコン色：背景Aが暗いなら白く（invert(1)）、明るいなら黒のまま（invert(0)）
-    // 背景が暗い → bestTextOn は #e5e7eb（白寄り）になる
-    const bgIsDark = (textAuto === "#e5e7eb");
-    root.setProperty("--settings-icon-filter", bgIsDark ? "invert(1)" : "invert(0)");
+    // ★設定アイコン：背景が暗いなら白 / 明るいなら黒（SVGが黒でも見えるように）
+    // 白にしたい → invert(1) で黒を白に、黒にしたい → invert(0)
+    const {r,g,b} = hexToRgb(theme.pageBgA);
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+    const wantWhite = lum < 0.55; // bg暗い→白
+    root.setProperty("--settings-icon-filter", wantWhite ? "invert(1)" : "invert(0)");
+
+    // ★設定カード枠線：背景Aの反対色（白/黒）を「薄めた」色
+    // bg暗い→薄い白寄り / bg明るい→薄い黒寄り
+    const settingsBorder = mixHex(textAuto, theme.pageBgA, 0.72);
+    root.setProperty("--settings-border", settingsBorder);
   }
 
   function makeEventSources(calendarsEffective) {
@@ -1163,7 +1178,7 @@
   function setNavOverride(key, value){
     overrides.nav = Object.assign({}, overrides.nav || {}, { [key]: value });
     saveOverridesToLS();
-    rebuildCalendar(); // 言語も絡むので作り直しが安全
+    rebuildCalendar();
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
     syncNavUI();
@@ -1208,7 +1223,7 @@
       setAddOpen(open);
     });
 
-    // ナビ
+    // ナビ（config.jsonに保存される nav を上書き）
     $("btnGoPrev").addEventListener("click", () => calendar && calendar.prev());
     $("btnGoNext").addEventListener("click", () => calendar && calendar.next());
     $("btnGoToday").addEventListener("click", () => calendar && calendar.today());
@@ -1216,6 +1231,7 @@
     $("viewMode").addEventListener("change", (e) => {
       const v = (e.target.value === "dayGridMonth") ? "dayGridMonth" : "timeGridWeek";
       setNavOverride("viewMode", v);
+      if (calendar) calendar.changeView(v);
     });
 
     $("weekdayLang").addEventListener("change", (e) => {
