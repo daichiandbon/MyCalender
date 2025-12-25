@@ -13,12 +13,12 @@
     "altB": "#ffffff"
   },
   "view": {
-    "slotMin": "08:00:00",
+    "slotMin": "07:00:00",
     "slotMax": "23:59:00"
   },
   "nav": {
     "viewMode": "timeGridWeek",
-    "weekdayLang": "ja"
+    "weekdayLang": "en"
   },
   "calendars": {
     "bonbonbon0105@gmail.com": {
