@@ -111,19 +111,11 @@
     .eventModalTop{
       display:flex;
       justify-content:space-between;
-      align-items:flex-start;
+      align-items:center; /* ← flex-start から変更 */
       gap:10px;
       margin-bottom:10px;
     }
-    .eventModalClose{
-      border:1px solid var(--border);
-      background:transparent;
-      color:var(--text);
-      border-radius:12px;
-      cursor:pointer;
-      font-size:12px;
-      padding:6px 10px;
-    }
+    
     .eventModalClose:hover{filter:brightness(1.1);}
 
     .eventModalTime{
@@ -384,7 +376,7 @@
   <div class="eventModal" id="eventModal" aria-hidden="true">
     <div class="eventModalTop">
       <div class="small">予定</div>
-      <button class="eventModalClose" id="eventCloseBtn">閉じる（Esc）</button>
+      <button class="iconBtn" id="eventCloseBtn" aria-label="閉じる" title="閉じる（Esc）">✕</button>
     </div>
     <div class="eventModalTime" id="eventModalTime">--:--</div>
     <div class="eventModalTitle" id="eventModalTitle">タイトル</div>
