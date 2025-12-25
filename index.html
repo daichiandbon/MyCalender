@@ -174,13 +174,12 @@
       overflow:auto !important;
     }
 
-    h1{font-size:16px; margin:0 0 10px;}
+    h1{font-size:16px; margin:0;}
     .small{font-size:12px; color:var(--muted); line-height:1.35;}
 
     .card{
       /* ★設定の枠線は settings-border を使う */
       border:1px solid var(--settings-border);
-
       border-radius:12px;
       padding:10px;
       margin:10px 0;
@@ -226,12 +225,31 @@
     .btn.pri{border-color:#1d4ed8; background:rgba(59,130,246,.14);}
     .btn.ghost{background:transparent;}
 
+    /* ★✕アイコンボタン（閉じる/畳む） */
+    .iconBtn{
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      line-height:1;
+      padding:0;
+      opacity:.9;
+      user-select:none;
+    }
+    .iconBtn:hover{opacity:1; filter:brightness(1.1);}
+
     .list{display:flex; flex-direction:column; gap:10px;}
 
     .item{
       /* ★設定の枠線は settings-border を使う */
       border:1px solid var(--settings-border);
-
       border-radius:12px;
       padding:10px;
       background:rgba(0,0,0,.15);
@@ -367,6 +385,18 @@
       pointer-events:none;
       filter: var(--settings-icon-filter, none);
     }
+
+    /* ★設定ドロワー上部のヘッダー（右上に✕） */
+    .drawerHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .drawerHeaderLeft{
+      min-width:0;
+    }
   </style>
 </head>
 
@@ -390,25 +420,29 @@
   </main>
 
   <aside class="drawer" id="drawer">
-    <h1>設定</h1>
-    <div class="small">
-      起動時は <b>config.json</b> を基準に読み込み。<br>
-      変更した瞬間から差分だけを <b>localStorage</b> に保存して反映。<br>
-      Export は「今見えてる状態（基準＋差分）」を新しい config.json として出力。
+    <!-- ★右上：設定ドロワーを閉じる（✕） -->
+    <div class="drawerHeader">
+      <div class="drawerHeaderLeft">
+        <h1>設定</h1>
+        <div class="small" style="margin-top:6px;">
+          起動時は <b>config.json</b> を基準に読み込み。<br>
+          変更した瞬間から差分だけを <b>localStorage</b> に保存して反映。<br>
+          Export は「今見えてる状態（基準＋差分）」を新しい config.json として出力。
+        </div>
+      </div>
+      <button class="iconBtn" id="btnDrawerClose" aria-label="設定を閉じる" title="設定を閉じる">✕</button>
     </div>
 
     <!-- ★統合パネル：status + Export JSON + GitHubリンク（折りたたみ） -->
     <div class="card">
       <div class="row" style="justify-content:space-between; align-items:flex-start;">
-        <div style="min-width:0;">
+        <div style="min-width:0; flex:1;">
           <div style="font-size:13px;">状態 / Export</div>
           <div class="small" id="statusLine" style="margin-top:2px;">status: ...</div>
         </div>
 
-        <div class="row" style="justify-content:flex-end;">
-          <button class="btn ghost" id="btnToggleSys">開く</button>
-          <button class="btn" id="btnClose">閉じる</button>
-        </div>
+        <!-- ★左の閉じる＝このパネルを畳む（✕）：カード右上 -->
+        <button class="iconBtn" id="btnToggleSys" aria-label="状態 / Export を畳む" title="畳む/開く">✕</button>
       </div>
 
       <div class="collapsibleBody" id="sysBody">
@@ -617,7 +651,7 @@
   const LS_OVERRIDE_KEY = "mycalendar.overrides.v1";
   const LS_DRAWER_KEY   = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY  = "mycalendar.add.open";
-  const LS_SYSOPEN_KEY  = "mycalendar.sys.open"; // ★追加：統合パネルの開閉
+  const LS_SYSOPEN_KEY  = "mycalendar.sys.open"; // ★状態/Exportパネルの開閉
 
   // 表示/言語（config.jsonにも保存）
   const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
@@ -785,14 +819,12 @@
     root.setProperty("--fc-neutral-text-color", textAuto);
 
     // ★設定アイコン：背景が暗いなら白 / 明るいなら黒（SVGが黒でも見えるように）
-    // 白にしたい → invert(1) で黒を白に、黒にしたい → invert(0)
     const {r,g,b} = hexToRgb(theme.pageBgA);
     const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
     const wantWhite = lum < 0.55; // bg暗い→白
     root.setProperty("--settings-icon-filter", wantWhite ? "invert(1)" : "invert(0)");
 
     // ★設定カード枠線：背景Aの反対色（白/黒）を「薄めた」色
-    // bg暗い→薄い白寄り / bg明るい→薄い黒寄り
     const settingsBorder = mixHex(textAuto, theme.pageBgA, 0.72);
     root.setProperty("--settings-border", settingsBorder);
   }
@@ -902,10 +934,11 @@
     }
   }
 
-  // ★追加：統合パネル開閉
   function setSysOpen(open){
     $("sysBody").classList.toggle("on", open);
-    $("btnToggleSys").textContent = open ? "閉じる" : "開く";
+    // ★アイコンは同じ✕のまま。ariaだけ切り替え。
+    $("btnToggleSys").setAttribute("aria-label", open ? "状態 / Export を畳む" : "状態 / Export を開く");
+    $("btnToggleSys").title = open ? "畳む" : "開く";
     localStorage.setItem(LS_SYSOPEN_KEY, open ? "1" : "0");
   }
 
@@ -1236,17 +1269,18 @@
 
     setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
     setAddOpen(localStorage.getItem(LS_ADDOPEN_KEY) === "1");
-    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1"); // ★追加
+    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1");
 
     const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
     $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    $("btnClose").addEventListener("click", () => setDrawer(false));
+    // ★設定ドロワー閉じる（右上✕）
+    $("btnDrawerClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
-    // ★統合パネル開閉
+    // ★状態/Export パネルを畳む（右上✕）
     $("btnToggleSys").addEventListener("click", () => {
       const open = !$("sysBody").classList.contains("on");
       setSysOpen(open);
