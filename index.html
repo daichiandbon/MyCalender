@@ -13,7 +13,7 @@
 
   <style>
     :root{
-      /* このへんは起動時にJSで背景A/Bから自動生成して上書きする */
+      /* 起動時にJSで背景A/Bから自動生成して上書きする */
       --bg:#0b0f14;
       --panel:#111827;
       --panel2:#0f172a;
@@ -22,7 +22,13 @@
       --border:#1f2937;
       --btn:#1f2937;
 
-      /* FullCalendar vars（これもJSで上書きされる） */
+      /* 追加：設定UIの入力背景（JSで背景Aに上書き） */
+      --input-bg:#0b1220;
+
+      /* 設定アイコン（SVG URLをJSで入れる） */
+      --settings-icon-url: none;
+
+      /* FullCalendar vars（JSで上書きされる） */
       --fc-page-bg-color:#ffffff;          /* 互換用（使わない） */
       --fc-page-bg-color-a:#0b0f14;        /* 背景A */
       --fc-page-bg-color-b:#0e1420;        /* 背景B */
@@ -71,6 +77,71 @@
     }
     .drawer.open{transform:translateX(0);}
 
+    /* ===== クリック拡大表示（モーダル） ===== */
+    .eventOverlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      z-index:10050;
+      display:none;
+    }
+    .eventOverlay.on{display:block;}
+
+    .eventModal{
+      position:fixed;
+      left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:min(680px, calc(100vw - 28px));
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
+      padding:18px 18px 16px;
+      box-sizing:border-box;
+      z-index:10051;
+      display:none;
+    }
+    .eventModal.on{display:block;}
+
+    .eventModalTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .eventModalClose{
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      border-radius:12px;
+      cursor:pointer;
+      font-size:12px;
+      padding:6px 10px;
+    }
+    .eventModalClose:hover{filter:brightness(1.1);}
+
+    .eventModalTime{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.02em;
+      color:var(--text);
+      margin:4px 0 8px;
+      line-height:1.1;
+    }
+    .eventModalTitle{
+      font-size:34px;
+      font-weight:900;
+      line-height:1.15;
+      word-break:break-word;
+      color:var(--text);
+    }
+    .eventModalSub{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+
     /* メイン（縦追従：重要） */
     .main{
       height:100vh;
@@ -109,9 +180,12 @@
     .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
     .hr{height:1px; background:var(--border); margin:10px 0;}
     label{font-size:12px; color:var(--muted);}
-    input[type="text"], textarea{
+
+    /* ★入力ボックス背景：背景Aに追従（JSで --input-bg を上書き） */
+    input[type="text"], textarea, select,
+    input[type="number"], input[type="time"]{
       width:100%;
-      background:#0b1220;
+      background:var(--input-bg);
       border:1px solid var(--border);
       color:var(--text);
       padding:8px 10px;
@@ -125,26 +199,8 @@
       font-size:12px;
     }
     input[type="color"]{width:46px; height:32px; border:none; background:transparent; padding:0;}
-    input[type="number"]{
-      width:120px;
-      background:#0b1220;
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:6px 8px;
-      border-radius:10px;
-      outline:none;
-      box-sizing:border-box;
-    }
-    input[type="time"]{
-      width:140px;
-      background:#0b1220;
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:6px 8px;
-      border-radius:10px;
-      outline:none;
-      box-sizing:border-box;
-    }
+    input[type="number"]{width:120px;}
+    input[type="time"]{width:140px;}
 
     .btn{
       background:var(--btn);
@@ -187,9 +243,8 @@
     .fc .fc-timegrid-slot-label-cushion{
       color:var(--fc-neutral-text-color) !important;
     }
-    .fc .fc-button{color:#fff !important;}
 
-    /* ★イベント文字色：設定のeventTextが反映される */
+    /* ★イベント文字色 */
     .fc .fc-event{
       color:var(--fc-event-text-color) !important;
     }
@@ -219,7 +274,7 @@
       background:transparent !important;
     }
 
-    /* ★イベント枠線：背景Aと同じ色（透明じゃない） */
+    /* ★イベント枠線：背景A */
     .fc .fc-event,
     .fc .fc-event-main,
     .fc .fc-event-selected,
@@ -233,11 +288,84 @@
 
     .collapsibleBody{display:none; margin-top:10px;}
     .collapsibleBody.on{display:block;}
+
+    /* ========= ヘッダー周り：今回の肝 ========= */
+
+    /* 中央タイトル（何日〜何日）を消す */
+    .fc .fc-toolbar-title{ display:none !important; }
+
+    /* ツールバーは残す（settingsを置くため） */
+    .fc .fc-header-toolbar{
+      margin:0 0 6px !important;
+      display:flex !important;
+      justify-content:flex-end !important; /* ★右寄せ強制 */
+    }
+
+    /* left/center chunk を潰して右だけ残す */
+    .fc .fc-toolbar-chunk:not(:last-child){ display:none !important; }
+    .fc .fc-toolbar-chunk:last-child{
+      margin-left:auto !important; /* ★右上に押し込む保険 */
+      display:flex !important;
+      justify-content:flex-end !important;
+      width:auto !important;
+    }
+
+    /* 右チャンク内でも settings 以外を消す（保険） */
+    .fc .fc-toolbar-chunk:last-child .fc-button:not(.fc-settings-button){
+      display:none !important;
+    }
+
+    /* ★settingsボタンを目立たなく（背景Aと同色） */
+    .fc .fc-settings-button{
+      background: var(--fc-page-bg-color-a) !important;
+      border-color: var(--fc-page-bg-color-a) !important;
+      color: transparent !important; /* テキスト消す */
+      box-shadow:none !important;
+      opacity:.78;
+      padding:6px 9px !important;
+      border-radius:12px !important;
+      position:relative;
+      min-width:34px;
+      min-height:30px;
+    }
+    .fc .fc-settings-button:hover{
+      opacity:.95;
+      filter:none !important;
+    }
+    .fc .fc-settings-button:focus{ box-shadow:none !important; }
+
+    /* SVGアイコン表示（背景画像として表示） */
+    .fc .fc-settings-button::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      margin:auto;
+      width:18px;
+      height:18px;
+      background-image: var(--settings-icon-url);
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:contain;
+      opacity:.95;
+      pointer-events:none;
+    }
   </style>
 </head>
 
 <body>
   <div class="overlay" id="overlay"></div>
+
+  <!-- クリック拡大表示用 -->
+  <div class="eventOverlay" id="eventOverlay"></div>
+  <div class="eventModal" id="eventModal" aria-hidden="true">
+    <div class="eventModalTop">
+      <div class="small">予定</div>
+      <button class="eventModalClose" id="eventCloseBtn">閉じる（Esc）</button>
+    </div>
+    <div class="eventModalTime" id="eventModalTime">--:--</div>
+    <div class="eventModalTitle" id="eventModalTitle">タイトル</div>
+    <div class="eventModalSub" id="eventModalSub"></div>
+  </div>
 
   <main class="main">
     <div id="calendar"></div>
@@ -260,6 +388,39 @@
       <div class="row" style="justify-content:space-between;">
         <button class="btn" id="btnReloadConfig">config.json 再読込</button>
         <button class="btn bad" id="btnClearOverrides">ローカル差分を消す</button>
+      </div>
+    </div>
+
+    <!-- ナビ / 表示 -->
+    <div class="card">
+      <div>
+        <div style="font-size:13px;">ナビ / 表示</div>
+        <div class="small">週・月の切替 / 今日へ / 曜日言語</div>
+      </div>
+      <div class="hr"></div>
+
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn" id="btnGoPrev">← 前</button>
+        <button class="btn" id="btnGoToday">今日</button>
+        <button class="btn" id="btnGoNext">次 →</button>
+      </div>
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <div style="flex:1; min-width:160px;">
+          <label>表示</label><br>
+          <select id="viewMode">
+            <option value="timeGridWeek">Week</option>
+            <option value="dayGridMonth">Month</option>
+          </select>
+        </div>
+
+        <div style="flex:1; min-width:160px;">
+          <label>曜日の言語</label><br>
+          <select id="weekdayLang">
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -403,11 +564,18 @@
   const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
   // =======================
 
+  // ★ここにGitHubのSVG (raw URL) を入れる
+  // 例: "https://raw.githubusercontent.com/USER/REPO/main/settings.svg"
+  const SETTINGS_ICON_URL = "https://raw.githubusercontent.com/daichiandbon/HelperCalender/refs/heads/main/setting.svg";
+
   const CONFIG_URL = "./config.json";
 
   const LS_OVERRIDE_KEY = "mycalendar.overrides.v1";
   const LS_DRAWER_KEY   = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY  = "mycalendar.add.open";
+
+  // 追加：表示/言語
+  const LS_NAV_KEY = "mycalendar.nav.v1";
 
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
 
@@ -423,6 +591,24 @@
   const $ = (id) => document.getElementById(id);
   const clone = (obj) => structuredClone(obj);
   const isObj = (x) => x && typeof x === "object" && !Array.isArray(x);
+
+  function loadNavFromLS(){
+    try{
+      const raw = localStorage.getItem(LS_NAV_KEY);
+      if(!raw) return { viewMode:"timeGridWeek", weekdayLang:"ja" };
+      const o = JSON.parse(raw);
+      return {
+        viewMode: (o.viewMode === "dayGridMonth" ? "dayGridMonth" : "timeGridWeek"),
+        weekdayLang: (o.weekdayLang === "en" ? "en" : "ja"),
+      };
+    }catch{
+      return { viewMode:"timeGridWeek", weekdayLang:"ja" };
+    }
+  }
+  function saveNavToLS(nav){
+    localStorage.setItem(LS_NAV_KEY, JSON.stringify(nav));
+  }
+  let nav = loadNavFromLS();
 
   function toHHMMSSFromTimeInput(v){
     const s = (v || "").trim();
@@ -524,10 +710,7 @@
       rgbaFromHex(theme.today, Math.max(0, Math.min(1, theme.todayAlpha / 100)))
     );
 
-    // ★イベント文字色：設定で決める
     root.setProperty("--fc-event-text-color", theme.eventText);
-
-    // ★イベント枠線：背景Aと同じ
     root.setProperty("--fc-event-border-color", theme.pageBgA);
 
     // UI自動生成
@@ -542,6 +725,17 @@
     const btn    = mixHex(panel2, "#000000", 0.15);
     root.setProperty("--border", border);
     root.setProperty("--btn", btn);
+
+    // ★入力ボックス背景を「背景A」に合わせる
+    root.setProperty("--input-bg", theme.pageBgA);
+
+    // ★SVGアイコンURL（GitHub raw）
+    // CSS background-image用に url("...") 形式で入れる
+    if (SETTINGS_ICON_URL && SETTINGS_ICON_URL.includes("://")) {
+      root.setProperty("--settings-icon-url", `url("${SETTINGS_ICON_URL}")`);
+    } else {
+      root.setProperty("--settings-icon-url", "none");
+    }
 
     // ★textは背景Aと反対色（自動）
     const textAuto = bestTextOn(theme.pageBgA);
@@ -562,6 +756,27 @@
         googleCalendarId: calendarId,
         color: c.color || undefined
       }));
+  }
+
+  // クリック拡大表示
+  function formatHm(d){
+    if (!(d instanceof Date) || isNaN(d.getTime())) return "";
+    const h = String(d.getHours()).padStart(2,"0");
+    const m = String(d.getMinutes()).padStart(2,"0");
+    return `${h}:${m}`;
+  }
+  function openEventModal({ timeText, titleText, subText }){
+    $("eventModalTime").textContent = timeText || "";
+    $("eventModalTitle").textContent = titleText || "";
+    $("eventModalSub").textContent = subText || "";
+    $("eventOverlay").classList.add("on");
+    $("eventModal").classList.add("on");
+    $("eventModal").setAttribute("aria-hidden", "false");
+  }
+  function closeEventModal(){
+    $("eventOverlay").classList.remove("on");
+    $("eventModal").classList.remove("on");
+    $("eventModal").setAttribute("aria-hidden", "true");
   }
 
   // state
@@ -646,19 +861,25 @@
       calendar = null;
     }
 
+    const locale = (nav.weekdayLang === "ja") ? "ja" : "en";
+
     calendar = new FullCalendar.Calendar(el, {
       firstDay: 1,
-      initialView: "timeGridWeek",
+      initialView: nav.viewMode,
+      locale,
+
+      // ★ヘッダーは settings だけ置く（右上固定）
+      headerToolbar: {
+        left: "",
+        center: "title",   // titleはCSSで消す（高さ維持）
+        right: "settings",
+      },
       customButtons: {
         settings: {
-          text: "⚙",
+          // テキストは見せない（CSSで透明化）
+          text: "settings",
           click: () => setDrawer(!$("drawer").classList.contains("open")),
         }
-      },
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "settings timeGridWeek,dayGridMonth",
       },
 
       nowIndicator: true,
@@ -708,6 +929,45 @@
         }
       },
 
+      // ★クリック：詳細ページに飛ばさず拡大表示のみ
+      eventClick: (info) => {
+        info.jsEvent.preventDefault();
+        info.jsEvent.stopPropagation();
+
+        const calId = info.event.source?.id;
+        const cfg = effective.calendars?.[calId] || {};
+
+        const titleText = (cfg.showTitle === false)
+          ? String((cfg.label ?? "予定あり")).trim()
+          : String((info.event.title ?? "")).trim();
+
+        let timeText = "";
+        if (info.event.allDay) {
+          timeText = (nav.weekdayLang === "ja") ? "終日" : "All day";
+        } else {
+          const s = info.event.start;
+          const e = info.event.end;
+          const sh = formatHm(s);
+          const eh = formatHm(e);
+          timeText = eh ? `${sh} – ${eh}` : sh;
+        }
+
+        let subText = "";
+        try {
+          const d = info.event.start || info.event.end;
+          if (d instanceof Date && !isNaN(d.getTime())) {
+            if (nav.weekdayLang === "ja") {
+              const w = ["日","月","火","水","木","金","土"][d.getDay()];
+              subText = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${w}）`;
+            } else {
+              subText = d.toLocaleDateString("en-US", { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit" });
+            }
+          }
+        } catch {}
+
+        openEventModal({ timeText, titleText, subText });
+      },
+
       eventSourceFailure: (err) => {
         console.error("Google Calendar fetch failed:", err);
       }
@@ -735,6 +995,11 @@
   function syncViewUIFromEffective(){
     $("vMin").value = toHHMMFromHHMMSS(effective.view.slotMin);
     $("vMax").value = toHHMMFromHHMMSS(effective.view.slotMax);
+  }
+
+  function syncNavUI(){
+    $("viewMode").value = nav.viewMode;
+    $("weekdayLang").value = nav.weekdayLang;
   }
 
   function renderCalendarList() {
@@ -792,6 +1057,7 @@
         rebuildCalendar();
         syncThemeUIFromEffective();
         syncViewUIFromEffective();
+        syncNavUI();
         renderCalendarList();
       }
 
@@ -836,6 +1102,7 @@
         rebuildCalendar();
         syncThemeUIFromEffective();
         syncViewUIFromEffective();
+        syncNavUI();
         renderCalendarList();
       });
 
@@ -869,6 +1136,7 @@
     rebuildCalendar();
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
+    syncNavUI();
     renderCalendarList();
   }
 
@@ -878,6 +1146,7 @@
     rebuildCalendar();
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
+    syncNavUI();
     renderCalendarList();
   }
 
@@ -889,10 +1158,12 @@
 
   async function initAll() {
     overrides = loadOverridesFromLS();
+    nav = loadNavFromLS();
     await loadBaseConfigFromJson();
     rebuildCalendar();
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
+    syncNavUI();
     renderCalendarList();
 
     setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
@@ -906,9 +1177,37 @@
     $("btnClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
+    // モーダル閉じる
+    $("eventOverlay").addEventListener("click", closeEventModal);
+    $("eventCloseBtn").addEventListener("click", closeEventModal);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeEventModal();
+    });
+
     $("btnToggleAdd").addEventListener("click", () => {
       const open = !$("addBody").classList.contains("on");
       setAddOpen(open);
+    });
+
+    // ナビ
+    $("btnGoPrev").addEventListener("click", () => calendar && calendar.prev());
+    $("btnGoNext").addEventListener("click", () => calendar && calendar.next());
+    $("btnGoToday").addEventListener("click", () => calendar && calendar.today());
+
+    $("viewMode").addEventListener("change", (e) => {
+      nav.viewMode = (e.target.value === "dayGridMonth") ? "dayGridMonth" : "timeGridWeek";
+      saveNavToLS(nav);
+      if (calendar) calendar.changeView(nav.viewMode);
+    });
+
+    $("weekdayLang").addEventListener("change", (e) => {
+      nav.weekdayLang = (e.target.value === "en") ? "en" : "ja";
+      saveNavToLS(nav);
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      syncViewUIFromEffective();
+      syncNavUI();
+      renderCalendarList();
     });
 
     // view（時刻範囲）
@@ -928,10 +1227,11 @@
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
+      syncNavUI();
       renderCalendarList();
     });
 
-    // theme（UI色は背景から自動生成、操作できるのは背景A/B・罫線・今日・イベント文字）
+    // theme
     $("tBgA").addEventListener("input", (e) => setThemeOverride("pageBgA", e.target.value));
     $("tBgB").addEventListener("input", (e) => setThemeOverride("pageBgB", e.target.value));
     $("tBorder").addEventListener("input", (e) => setThemeOverride("border", e.target.value));
@@ -950,6 +1250,7 @@
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
+      syncNavUI();
       renderCalendarList();
     });
 
@@ -971,6 +1272,7 @@
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
+      syncNavUI();
       renderCalendarList();
     });
 
@@ -980,6 +1282,7 @@
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
+      syncNavUI();
       renderCalendarList();
 
       const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
@@ -995,6 +1298,7 @@
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
+      syncNavUI();
       renderCalendarList();
 
       const base = $("statusLine").textContent.split(" / ")[0];
