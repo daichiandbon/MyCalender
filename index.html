@@ -19,10 +19,7 @@
       --panel2:#0f172a;
       --text:#e5e7eb;
       --muted:#94a3b8;
-
-      /* ★枠線（JSで textAuto と同じ＝背景の反対色に上書き） */
       --border:#1f2937;
-
       --btn:#1f2937;
 
       /* 追加：設定UIの入力背景（JSで背景Aに上書き） */
@@ -31,16 +28,16 @@
       /* 設定アイコン（SVG URLをJSで入れる） */
       --settings-icon-url: none;
 
+      /* ★追加：設定アイコンの色（黒SVGを反転させるか） */
+      --settings-icon-filter: invert(0);
+
       /* FullCalendar vars（JSで上書きされる） */
       --fc-page-bg-color:#ffffff;          /* 互換用（使わない） */
       --fc-page-bg-color-a:#0b0f14;        /* 背景A */
       --fc-page-bg-color-b:#0e1420;        /* 背景B */
       --fc-neutral-bg-color:#0b0f14;
       --fc-neutral-text-color:#e5e7eb;
-
-      /* ★罫線色（JSで textAuto と同じ＝背景の反対色に上書き） */
       --fc-border-color:#1f2937;
-
       --fc-today-bg-color:rgba(255,220,40,.35);
 
       /* ★イベント文字色は設定で決める（反対色にはしない） */
@@ -340,7 +337,7 @@
     }
     .fc .fc-settings-button:focus{ box-shadow:none !important; }
 
-    /* SVGアイコン表示（background-image） */
+    /* SVGアイコン表示（背景画像として表示） */
     .fc .fc-settings-button::before{
       content:"";
       position:absolute;
@@ -354,6 +351,9 @@
       background-size:contain;
       opacity:.95;
       pointer-events:none;
+
+      /* ★追加：背景が暗い時は白く（invert） */
+      filter: var(--settings-icon-filter);
     }
   </style>
 </head>
@@ -427,6 +427,10 @@
             <option value="en">English</option>
           </select>
         </div>
+      </div>
+
+      <div class="small" style="margin-top:8px;">
+        ※この設定は Export に含まれます（config.jsonで他デバイスへ持ち運べる）。
       </div>
     </div>
 
@@ -580,8 +584,8 @@
   const LS_DRAWER_KEY   = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY  = "mycalendar.add.open";
 
-  // 追加：表示/言語
-  const LS_NAV_KEY = "mycalendar.nav.v1";
+  // ★navをconfig.jsonに含める（デバイス間持ち運び用）
+  const PAGE_DEFAULT_NAV = { viewMode: "timeGridWeek", weekdayLang: "ja" };
 
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
 
@@ -597,24 +601,6 @@
   const $ = (id) => document.getElementById(id);
   const clone = (obj) => structuredClone(obj);
   const isObj = (x) => x && typeof x === "object" && !Array.isArray(x);
-
-  function loadNavFromLS(){
-    try{
-      const raw = localStorage.getItem(LS_NAV_KEY);
-      if(!raw) return { viewMode:"timeGridWeek", weekdayLang:"ja" };
-      const o = JSON.parse(raw);
-      return {
-        viewMode: (o.viewMode === "dayGridMonth" ? "dayGridMonth" : "timeGridWeek"),
-        weekdayLang: (o.weekdayLang === "en" ? "en" : "ja"),
-      };
-    }catch{
-      return { viewMode:"timeGridWeek", weekdayLang:"ja" };
-    }
-  }
-  function saveNavToLS(nav){
-    localStorage.setItem(LS_NAV_KEY, JSON.stringify(nav));
-  }
-  let nav = loadNavFromLS();
 
   function toHHMMSSFromTimeInput(v){
     const s = (v || "").trim();
@@ -680,6 +666,12 @@
     out.slotMax = clampTimeHHMMSS(out.slotMax, PAGE_DEFAULT_VIEW.slotMax);
     return out;
   }
+  function normalizeNav(n){
+    const out = Object.assign({}, PAGE_DEFAULT_NAV, isObj(n) ? n : {});
+    out.viewMode = (out.viewMode === "dayGridMonth") ? "dayGridMonth" : "timeGridWeek";
+    out.weekdayLang = (out.weekdayLang === "en") ? "en" : "ja";
+    return out;
+  }
 
   function mergeTheme(base, over){
     const out = clone(base);
@@ -690,6 +682,11 @@
     const out = clone(base);
     if (isObj(over)) Object.assign(out, over);
     return normalizeView(out);
+  }
+  function mergeNav(base, over){
+    const out = clone(base);
+    if (isObj(over)) Object.assign(out, over);
+    return normalizeNav(out);
   }
   function mergeCalendars(base, over){
     const out = clone(base);
@@ -710,6 +707,7 @@
     root.setProperty("--fc-page-bg-color-a", theme.pageBgA);
     root.setProperty("--fc-page-bg-color-b", theme.pageBgB);
     root.setProperty("--fc-neutral-bg-color", theme.pageBgA);
+    root.setProperty("--fc-border-color", theme.border);
 
     root.setProperty("--fc-today-bg-color",
       rgbaFromHex(theme.today, Math.max(0, Math.min(1, theme.todayAlpha / 100)))
@@ -725,6 +723,11 @@
     const panel2 = mixHex(theme.pageBgA, theme.pageBgB, 0.55);
     root.setProperty("--panel", panel);
     root.setProperty("--panel2", panel2);
+
+    const border = mixHex(panel, "#000000", 0.25);
+    const btn    = mixHex(panel2, "#000000", 0.15);
+    root.setProperty("--border", border);
+    root.setProperty("--btn", btn);
 
     // ★入力ボックス背景を「背景A」に合わせる
     root.setProperty("--input-bg", theme.pageBgA);
@@ -743,16 +746,13 @@
     const muted = mixHex(textAuto, theme.pageBgA, 0.55);
     root.setProperty("--muted", muted);
 
-    // ★枠線は「文字と同じ」＝背景Aの反対色でクッキリ
-    root.setProperty("--border", textAuto);
-    root.setProperty("--fc-border-color", textAuto);
-
-    // ボタン背景は今まで通り（枠線だけ強くする）
-    const btn = mixHex(panel2, "#000000", 0.15);
-    root.setProperty("--btn", btn);
-
     // FullCalendarの軸や見出し文字色もこれに寄せる（イベント文字は別）
     root.setProperty("--fc-neutral-text-color", textAuto);
+
+    // ★設定アイコン色：背景Aが暗いなら白く（invert(1)）、明るいなら黒のまま（invert(0)）
+    // 背景が暗い → bestTextOn は #e5e7eb（白寄り）になる
+    const bgIsDark = (textAuto === "#e5e7eb");
+    root.setProperty("--settings-icon-filter", bgIsDark ? "invert(1)" : "invert(0)");
   }
 
   function makeEventSources(calendarsEffective) {
@@ -787,33 +787,35 @@
   }
 
   // state
-  let baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), calendars: {} };
-  let overrides  = { theme: {}, view: {}, calendars: {} };
-  let effective  = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), calendars: {} };
+  let baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {} };
+  let overrides  = { theme: {}, view: {}, nav: {}, calendars: {} };
+  let effective  = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {} };
   let calendar = null;
   let resizeBound = false;
 
   function loadOverridesFromLS() {
     try {
       const raw = localStorage.getItem(LS_OVERRIDE_KEY);
-      if (!raw) return { theme: {}, view: {}, calendars: {} };
+      if (!raw) return { theme: {}, view: {}, nav: {}, calendars: {} };
       const obj = JSON.parse(raw);
-      if (!isObj(obj)) return { theme: {}, view: {}, calendars: {} };
+      if (!isObj(obj)) return { theme: {}, view: {}, nav: {}, calendars: {} };
       return {
         theme: isObj(obj.theme) ? obj.theme : {},
         view: isObj(obj.view) ? obj.view : {},
+        nav: isObj(obj.nav) ? obj.nav : {},
         calendars: isObj(obj.calendars) ? obj.calendars : {}
       };
     } catch {
-      return { theme: {}, view: {}, calendars: {} };
+      return { theme: {}, view: {}, nav: {}, calendars: {} };
     }
   }
 
   function saveOverridesToLS() {
     const hasTheme = isObj(overrides.theme) && Object.keys(overrides.theme).length > 0;
     const hasView  = isObj(overrides.view) && Object.keys(overrides.view).length > 0;
+    const hasNav   = isObj(overrides.nav) && Object.keys(overrides.nav).length > 0;
     const hasCals  = isObj(overrides.calendars) && Object.keys(overrides.calendars).length > 0;
-    if (!hasTheme && !hasView && !hasCals) {
+    if (!hasTheme && !hasView && !hasNav && !hasCals) {
       localStorage.removeItem(LS_OVERRIDE_KEY);
       return;
     }
@@ -822,7 +824,8 @@
 
   function recomputeEffective() {
     effective.theme = mergeTheme(baseConfig.theme || PAGE_DEFAULT_THEME, overrides.theme);
-    effective.view = mergeView(baseConfig.view || PAGE_DEFAULT_VIEW, overrides.view);
+    effective.view  = mergeView(baseConfig.view || PAGE_DEFAULT_VIEW, overrides.view);
+    effective.nav   = mergeNav(baseConfig.nav || PAGE_DEFAULT_NAV, overrides.nav);
     effective.calendars = mergeCalendars(baseConfig.calendars || {}, overrides.calendars);
   }
 
@@ -834,13 +837,14 @@
       baseConfig = {
         theme: normalizeTheme(data.theme || {}),
         view: normalizeView(data.view || {}),
+        nav: normalizeNav(data.nav || {}),
         calendars: isObj(data.calendars) ? data.calendars : {}
       };
       $("statusLine").textContent = "status: config.json 読み込みOK";
       return true;
     } catch (e) {
       console.warn(e);
-      baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), calendars: {} };
+      baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {} };
       $("statusLine").textContent = "status: config.json なし（ページ標準で起動）";
       return false;
     }
@@ -868,11 +872,11 @@
       calendar = null;
     }
 
-    const locale = (nav.weekdayLang === "ja") ? "ja" : "en";
+    const locale = (effective.nav.weekdayLang === "ja") ? "ja" : "en";
 
     calendar = new FullCalendar.Calendar(el, {
       firstDay: 1,
-      initialView: nav.viewMode,
+      initialView: effective.nav.viewMode,
       locale,
 
       // ★ヘッダーは settings だけ置く（右上固定）
@@ -949,7 +953,7 @@
 
         let timeText = "";
         if (info.event.allDay) {
-          timeText = (nav.weekdayLang === "ja") ? "終日" : "All day";
+          timeText = (effective.nav.weekdayLang === "ja") ? "終日" : "All day";
         } else {
           const s = info.event.start;
           const e = info.event.end;
@@ -962,7 +966,7 @@
         try {
           const d = info.event.start || info.event.end;
           if (d instanceof Date && !isNaN(d.getTime())) {
-            if (nav.weekdayLang === "ja") {
+            if (effective.nav.weekdayLang === "ja") {
               const w = ["日","月","火","水","木","金","土"][d.getDay()];
               subText = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${w}）`;
             } else {
@@ -1004,8 +1008,8 @@
   }
 
   function syncNavUI(){
-    $("viewMode").value = nav.viewMode;
-    $("weekdayLang").value = nav.weekdayLang;
+    $("viewMode").value = effective.nav.viewMode;
+    $("weekdayLang").value = effective.nav.weekdayLang;
   }
 
   function renderCalendarList() {
@@ -1127,7 +1131,7 @@
 
   function buildExportObject() {
     recomputeEffective();
-    return { theme: effective.theme, view: effective.view, calendars: effective.calendars };
+    return { theme: effective.theme, view: effective.view, nav: effective.nav, calendars: effective.calendars };
   }
 
   function setExportText() {
@@ -1156,6 +1160,16 @@
     renderCalendarList();
   }
 
+  function setNavOverride(key, value){
+    overrides.nav = Object.assign({}, overrides.nav || {}, { [key]: value });
+    saveOverridesToLS();
+    rebuildCalendar(); // 言語も絡むので作り直しが安全
+    syncThemeUIFromEffective();
+    syncViewUIFromEffective();
+    syncNavUI();
+    renderCalendarList();
+  }
+
   function setAddOpen(open){
     $("addBody").classList.toggle("on", open);
     $("btnToggleAdd").textContent = open ? "閉じる" : "開く";
@@ -1164,7 +1178,6 @@
 
   async function initAll() {
     overrides = loadOverridesFromLS();
-    nav = loadNavFromLS();
     await loadBaseConfigFromJson();
     rebuildCalendar();
     syncThemeUIFromEffective();
@@ -1201,19 +1214,13 @@
     $("btnGoToday").addEventListener("click", () => calendar && calendar.today());
 
     $("viewMode").addEventListener("change", (e) => {
-      nav.viewMode = (e.target.value === "dayGridMonth") ? "dayGridMonth" : "timeGridWeek";
-      saveNavToLS(nav);
-      if (calendar) calendar.changeView(nav.viewMode);
+      const v = (e.target.value === "dayGridMonth") ? "dayGridMonth" : "timeGridWeek";
+      setNavOverride("viewMode", v);
     });
 
     $("weekdayLang").addEventListener("change", (e) => {
-      nav.weekdayLang = (e.target.value === "en") ? "en" : "ja";
-      saveNavToLS(nav);
-      rebuildCalendar();
-      syncThemeUIFromEffective();
-      syncViewUIFromEffective();
-      syncNavUI();
-      renderCalendarList();
+      const v = (e.target.value === "en") ? "en" : "ja";
+      setNavOverride("weekdayLang", v);
     });
 
     // view（時刻範囲）
@@ -1299,7 +1306,7 @@
     // clear overrides
     $("btnClearOverrides").addEventListener("click", () => {
       if (!confirm("ローカル差分を消して、config.json基準に戻す？")) return;
-      overrides = { theme: {}, view: {}, calendars: {} };
+      overrides = { theme: {}, view: {}, nav: {}, calendars: {} };
       localStorage.removeItem(LS_OVERRIDE_KEY);
       rebuildCalendar();
       syncThemeUIFromEffective();
