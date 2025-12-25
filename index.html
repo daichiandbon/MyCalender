@@ -343,7 +343,7 @@
       min-height:30px;
     }
     .fc .fc-settings-button:hover{
-      opacity:.95;
+      opacity:.45;
       filter:none !important;
     }
     .fc .fc-settings-button:focus{ box-shadow:none !important; }
@@ -1262,16 +1262,13 @@
     syncNavUI();
     renderCalendarList();
 
-    setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
-    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1");
-    setAddOpen(localStorage.getItem(LS_ADDOPEN_KEY) === "1");
+    setDrawer(false);
+    // 起動時はすべて「閉じ」
+    setSysOpen(false);
+    setNavViewOpen(false);
+    setThemeOpen(false);
+    setAddOpen(false);
 
-    // ★未設定なら「開く」をデフォルトにする
-    const navvRaw = localStorage.getItem(LS_NAVVIEWOPEN_KEY);
-    setNavViewOpen(navvRaw === null ? true : (navvRaw === "1"));
-
-    const themeRaw = localStorage.getItem(LS_THEMEOPEN_KEY);
-    setThemeOpen(themeRaw === null ? true : (themeRaw === "1"));
 
     const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
     $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
