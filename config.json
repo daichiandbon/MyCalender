@@ -1,7 +1,7 @@
 {
   "theme": {
-    "pageBgA": "#000000",
-    "pageBgB": "#000000",
+    "pageBgA": "#0d0d0d",
+    "pageBgB": "#121212",
     "border": "#1f2937",
     "today": "#c875ff",
     "todayAlpha": 35,
