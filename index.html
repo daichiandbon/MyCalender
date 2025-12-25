@@ -441,8 +441,8 @@
           <div class="small" id="statusLine" style="margin-top:2px;">status: ...</div>
         </div>
 
-        <!-- ★左の閉じる＝このパネルを畳む（✕）：カード右上 -->
-        <button class="iconBtn" id="btnToggleSys" aria-label="状態 / Export を畳む" title="畳む/開く">✕</button>
+        <!-- ★開いてる時：✕ / 畳んでる時：▼ -->
+        <button class="iconBtn" id="btnToggleSys" aria-label="状態 / Export を畳む" title="畳む">✕</button>
       </div>
 
       <div class="collapsibleBody" id="sysBody">
@@ -934,11 +934,17 @@
     }
   }
 
+  // ★ボタン表示も含めて状態/Exportを開閉
   function setSysOpen(open){
     $("sysBody").classList.toggle("on", open);
-    // ★アイコンは同じ✕のまま。ariaだけ切り替え。
-    $("btnToggleSys").setAttribute("aria-label", open ? "状態 / Export を畳む" : "状態 / Export を開く");
-    $("btnToggleSys").title = open ? "畳む" : "開く";
+
+    const btn = $("btnToggleSys");
+    // 開いてる時：✕ / 畳んでる時：▼
+    btn.textContent = open ? "✕" : "▼";
+
+    btn.setAttribute("aria-label", open ? "状態 / Export を畳む" : "状態 / Export を開く");
+    btn.title = open ? "畳む" : "開く";
+
     localStorage.setItem(LS_SYSOPEN_KEY, open ? "1" : "0");
   }
 
@@ -1269,7 +1275,7 @@
 
     setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
     setAddOpen(localStorage.getItem(LS_ADDOPEN_KEY) === "1");
-    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1");
+    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1"); // ★ここでボタンも更新される
 
     const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
     $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
@@ -1280,7 +1286,7 @@
     $("btnDrawerClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
-    // ★状態/Export パネルを畳む（右上✕）
+    // ★状態/Export パネルを畳む/開く（右上アイコン）
     $("btnToggleSys").addEventListener("click", () => {
       const open = !$("sysBody").classList.contains("on");
       setSysOpen(open);
