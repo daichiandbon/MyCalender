@@ -397,15 +397,60 @@
       Export は「今見えてる状態（基準＋差分）」を新しい config.json として出力。
     </div>
 
+    <!-- ★統合パネル：status + Export JSON + GitHubリンク（折りたたみ） -->
     <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div class="small" id="statusLine">status: ...</div>
-        <button class="btn" id="btnClose">閉じる</button>
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div style="min-width:0;">
+          <div style="font-size:13px;">状態 / Export</div>
+          <div class="small" id="statusLine" style="margin-top:2px;">status: ...</div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn ghost" id="btnToggleSys">開く</button>
+          <button class="btn" id="btnClose">閉じる</button>
+        </div>
       </div>
-      <div class="hr"></div>
-      <div class="row" style="justify-content:space-between;">
-        <button class="btn" id="btnReloadConfig">config.json 再読込</button>
-        <button class="btn bad" id="btnClearOverrides">ローカル差分を消す</button>
+
+      <div class="collapsibleBody" id="sysBody">
+        <div class="hr"></div>
+
+        <div class="row" style="justify-content:space-between;">
+          <button class="btn" id="btnReloadConfig">config.json 再読込</button>
+          <button class="btn bad" id="btnClearOverrides">ローカル差分を消す</button>
+        </div>
+
+        <div style="height:10px;"></div>
+
+        <div class="small">
+          GitHub の config.json：<br>
+          <a
+            href="https://github.com/daichiandbon/MyCalender/blob/main/config.json"
+            target="_blank"
+            rel="noopener"
+            style="color:var(--text); text-decoration:underline; word-break:break-all;"
+          >開く</a>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;">Export JSON</div>
+            <div class="small">今の状態を config.json 形式で出力</div>
+          </div>
+          <button class="btn pri" id="btnExportDownload">Download</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="row" style="justify-content:space-between;">
+          <button class="btn" id="btnExportCopy">Copy</button>
+          <button class="btn" id="btnExportShow">表示</button>
+        </div>
+
+        <div id="exportArea" style="display:none; margin-top:10px;">
+          <label>config.json</label>
+          <textarea id="exportText" spellcheck="false"></textarea>
+        </div>
       </div>
     </div>
 
@@ -439,25 +484,6 @@
             <option value="en">English</option>
           </select>
         </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;">Export JSON</div>
-          <div class="small">今の状態を config.json 形式で出力</div>
-        </div>
-        <button class="btn pri" id="btnExportDownload">Download</button>
-      </div>
-      <div class="hr"></div>
-      <div class="row" style="justify-content:space-between;">
-        <button class="btn" id="btnExportCopy">Copy</button>
-        <button class="btn" id="btnExportShow">表示</button>
-      </div>
-      <div id="exportArea" style="display:none; margin-top:10px;">
-        <label>config.json</label>
-        <textarea id="exportText" spellcheck="false"></textarea>
       </div>
     </div>
 
@@ -591,6 +617,7 @@
   const LS_OVERRIDE_KEY = "mycalendar.overrides.v1";
   const LS_DRAWER_KEY   = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY  = "mycalendar.add.open";
+  const LS_SYSOPEN_KEY  = "mycalendar.sys.open"; // ★追加：統合パネルの開閉
 
   // 表示/言語（config.jsonにも保存）
   const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
@@ -873,6 +900,13 @@
       setTimeout(() => calendar.updateSize(), 0);
       setTimeout(() => calendar.updateSize(), 220);
     }
+  }
+
+  // ★追加：統合パネル開閉
+  function setSysOpen(open){
+    $("sysBody").classList.toggle("on", open);
+    $("btnToggleSys").textContent = open ? "閉じる" : "開く";
+    localStorage.setItem(LS_SYSOPEN_KEY, open ? "1" : "0");
   }
 
   function rebuildCalendar() {
@@ -1202,6 +1236,7 @@
 
     setDrawer(localStorage.getItem(LS_DRAWER_KEY) === "1");
     setAddOpen(localStorage.getItem(LS_ADDOPEN_KEY) === "1");
+    setSysOpen(localStorage.getItem(LS_SYSOPEN_KEY) === "1"); // ★追加
 
     const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
     $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
@@ -1210,6 +1245,12 @@
   document.addEventListener("DOMContentLoaded", () => {
     $("btnClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
+
+    // ★統合パネル開閉
+    $("btnToggleSys").addEventListener("click", () => {
+      const open = !$("sysBody").classList.contains("on");
+      setSysOpen(open);
+    });
 
     // モーダル閉じる
     $("eventOverlay").addEventListener("click", closeEventModal);
