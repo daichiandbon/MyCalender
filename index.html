@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-  <!-- Google Calendar plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
+  <!-- iCalendar plugin (ICS) -->
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6.1.11/index.global.min.js"></script>
 
   <style>
     :root{
@@ -111,11 +111,11 @@
     .eventModalTop{
       display:flex;
       justify-content:space-between;
-      align-items:center; /* ← flex-start から変更 */
+      align-items:center;
       gap:10px;
       margin-bottom:10px;
     }
-    
+
     .eventModalClose:hover{filter:brightness(1.1);}
 
     .eventModalTime{
@@ -170,7 +170,6 @@
     .small{font-size:12px; color:var(--muted); line-height:1.35;}
 
     .card{
-      /* ★設定の枠線は settings-border を使う */
       border:1px solid var(--settings-border);
       border-radius:12px;
       padding:10px;
@@ -364,7 +363,6 @@
       margin-bottom:8px;
     }
     .drawerHeaderLeft{min-width:0;}
-
   </style>
 </head>
 
@@ -579,11 +577,14 @@
       <div class="collapsibleBody" id="addBody">
         <div class="hr"></div>
 
-        <div class="small">Googleカレンダーの「カレンダーID」を貼る</div>
+        <div class="small">
+          <b>ICS URL</b>（iCal形式の非公開URL/公開URL）を貼る。<br>
+          ※この方式は APIキー不要。代わりに “プロキシ(Worker)” が必須。
+        </div>
         <div style="height:6px;"></div>
 
-        <label>カレンダーID</label>
-        <input type="text" id="newCalId" placeholder="例: xxxx@group.calendar.google.com / xxxx@gmail.com" />
+        <label>ICS URL</label>
+        <input type="text" id="newCalId" placeholder="例: https://calendar.google.com/calendar/ical/.../basic.ics" />
 
         <div class="inline">
           <div>
@@ -619,9 +620,12 @@
   </aside>
 
 <script>
-  // ========= 必須 =========
-  const GOOGLE_API_KEY = "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4";
   // =======================
+  // ICS（iCal）プロキシ（CORS回避）
+  // Cloudflare Workers 等で用意して、そのURLを入れる
+  // 例: https://my-ics-proxy.workers.dev/?url=
+  // =======================
+  const ICS_PROXY_BASE = "https://blue-mud-fde0.bonbonbon0105.workers.dev/";
 
   const SETTINGS_ICON_URL = "https://raw.githubusercontent.com/daichiandbon/MyCalender/refs/heads/main/setting.svg";
   const CONFIG_URL = "./config.json";
@@ -630,8 +634,8 @@
   const LS_DRAWER_KEY     = "mycalendar.drawer.open";
   const LS_ADDOPEN_KEY    = "mycalendar.add.open";
   const LS_SYSOPEN_KEY    = "mycalendar.sys.open";
-  const LS_NAVVIEWOPEN_KEY= "mycalendar.navview.open"; // ★追加
-  const LS_THEMEOPEN_KEY  = "mycalendar.theme.open";   // ★追加
+  const LS_NAVVIEWOPEN_KEY= "mycalendar.navview.open";
+  const LS_THEMEOPEN_KEY  = "mycalendar.theme.open";
 
   const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
@@ -797,12 +801,15 @@
     root.setProperty("--settings-border", settingsBorder);
   }
 
+  // ====== ICS EventSources ======
+  // calendarsのキーは「ICS URL」を想定（最小改造）
   function makeEventSources(calendarsEffective) {
     return Object.entries(calendarsEffective)
       .filter(([_, c]) => c && c.visible)
-      .map(([calendarId, c]) => ({
-        id: calendarId,
-        googleCalendarId: calendarId,
+      .map(([icsUrl, c]) => ({
+        id: icsUrl,
+        url: ICS_PROXY_BASE + encodeURIComponent(icsUrl),
+        format: "ics",
         color: c.color || undefined
       }));
   }
@@ -975,12 +982,11 @@
       slotMinTime: effective.view.slotMin,
       slotMaxTime: effective.view.slotMax,
 
-      googleCalendarApiKey: GOOGLE_API_KEY,
       eventSources: makeEventSources(effective.calendars),
 
       eventDidMount: (info) => {
-        const calId = info.event.source?.id;
-        const cfg = effective.calendars?.[calId];
+        const srcId = info.event.source?.id; // = icsUrl
+        const cfg = effective.calendars?.[srcId];
         if (!cfg) return;
 
         if (cfg.showTitle === false) {
@@ -1019,8 +1025,8 @@
         info.jsEvent.preventDefault();
         info.jsEvent.stopPropagation();
 
-        const calId = info.event.source?.id;
-        const cfg = effective.calendars?.[calId] || {};
+        const srcId = info.event.source?.id; // = icsUrl
+        const cfg = effective.calendars?.[srcId] || {};
 
         const titleText = (cfg.showTitle === false)
           ? String((cfg.label ?? "予定あり")).trim()
@@ -1053,17 +1059,21 @@
         openEventModal({ timeText, titleText, subText });
       },
 
-      eventSourceFailure: (err) => {
-        console.error("Google Calendar fetch failed raw:", err);
-
-        // FullCalendarのバージョンや環境で形が違うので、取れるもの全部出す
+      eventSourceFailure: async (err) => {
+        console.error("ICS fetch failed:", err);
+        // できればURL/本文も出す（環境差があるのでtry）
         try {
-          console.log("status:", err?.response?.status);
-          console.log("url:", err?.response?.url);
-          err?.response?.text?.().then(t => console.log("body:", t)).catch(()=>{});
+          const st = err?.response?.status;
+          const u = err?.response?.url;
+          $("statusLine").textContent = `status: ICS取得失敗（${st || "?"}）`;
+          console.log("status:", st);
+          console.log("url:", u);
+          if (err?.response?.text) {
+            const t = await err.response.text();
+            console.log("body:", t);
+          }
         } catch {}
       }
-
     });
 
     calendar.render();
@@ -1269,9 +1279,11 @@
     setThemeOpen(false);
     setAddOpen(false);
 
-
     const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
     $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
+    if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
+      $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -1317,6 +1329,12 @@
     $("weekdayLang").addEventListener("change", (e) => {
       const v = (e.target.value === "en") ? "en" : "ja";
       setNavOverride("weekdayLang", v);
+      // locale切替は作り直すのが確実
+      rebuildCalendar();
+      syncThemeUIFromEffective();
+      syncViewUIFromEffective();
+      syncNavUI();
+      renderCalendarList();
     });
 
     $("vMin").addEventListener("change", (e) => {
@@ -1364,7 +1382,8 @@
 
     $("btnAdd").addEventListener("click", () => {
       const id = normId($("newCalId").value);
-      if (!id) return alert("カレンダーIDが空。");
+      if (!id) return alert("ICS URL が空。");
+      if (!/^https?:\/\//i.test(id)) return alert("ICS URL は http(s) から始めて。");
 
       overrides.calendars[id] = {
         visible: $("newVisible").checked,
@@ -1394,6 +1413,9 @@
       const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
       const base = $("statusLine").textContent.split(" / ")[0];
       $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
+      if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
+        $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
+      }
     });
 
     $("btnClearOverrides").addEventListener("click", () => {
@@ -1409,6 +1431,9 @@
       const base = $("statusLine").textContent.split(" / ")[0];
       const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
       $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
+      if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
+        $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
+      }
     });
 
     $("btnExportShow").addEventListener("click", () => {
