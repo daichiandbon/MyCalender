@@ -8,19 +8,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-  <!-- Google Calendar plugin（Calendar ID 用） -->
+  <!-- Google Calendar plugin（Calendar ID用） -->
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.11/index.global.min.js"></script>
 
-  <!-- ical.js（ICALを提供する） -->
+  <!-- ICS用：ICAL（先に必要） -->
   <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-
-  <!-- iCalendar plugin (ICS) -->
+  <!-- ICS plugin -->
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6.1.11/index.global.min.js"></script>
-
 
   <style>
     :root{
-      /* 起動時にJSで背景A/Bから自動生成して上書きする */
       --bg:#0b0f14;
       --panel:#111827;
       --panel2:#0f172a;
@@ -29,28 +26,21 @@
       --border:#1f2937;
       --btn:#1f2937;
 
-      /* 追加：設定UIの入力背景（JSで背景Aに上書き） */
       --input-bg:#0b1220;
-
-      /* ★追加：設定UIのカード枠線（JSで背景Aから自動生成） */
       --settings-border:#94a3b8;
 
-      /* 設定アイコン（SVG URLをJSで入れる） */
       --settings-icon-url: none;
+      --settings-icon-filter: none;
 
-      /* FullCalendar vars（JSで上書きされる） */
-      --fc-page-bg-color:#ffffff;          /* 互換用（使わない） */
-      --fc-page-bg-color-a:#0b0f14;        /* 背景A */
-      --fc-page-bg-color-b:#0e1420;        /* 背景B */
+      --fc-page-bg-color:#ffffff;
+      --fc-page-bg-color-a:#0b0f14;
+      --fc-page-bg-color-b:#0e1420;
       --fc-neutral-bg-color:#0b0f14;
       --fc-neutral-text-color:#e5e7eb;
       --fc-border-color:#1f2937;
       --fc-today-bg-color:rgba(255,220,40,.35);
 
-      /* ★イベント文字色は設定で決める（反対色にはしない） */
       --fc-event-text-color:#ffffff;
-
-      /* ★イベント枠線は背景Aと同じ色（JSで上書き） */
       --fc-event-border-color:#0b0f14;
     }
 
@@ -80,7 +70,6 @@
       transition:transform 180ms ease;
 
       border-left:1px solid var(--settings-border);
-
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       padding:14px;
       box-sizing:border-box;
@@ -121,7 +110,6 @@
       gap:10px;
       margin-bottom:10px;
     }
-    .eventModalClose:hover{filter:brightness(1.1);}
 
     .eventModalTime{
       font-size:22px;
@@ -145,7 +133,6 @@
       line-height:1.35;
     }
 
-    /* メイン（縦追従：重要） */
     .main{
       height:100vh;
       padding:10px;
@@ -160,7 +147,6 @@
       background:transparent !important;
     }
 
-    /* FullCalendar内部の縮み＆スクロール（重要） */
     .fc,
     .fc .fc-view-harness,
     .fc .fc-scroller-harness,
@@ -186,7 +172,7 @@
     label{font-size:12px; color:var(--muted);}
 
     input[type="text"], textarea, select,
-    input[type="number"], input[type="time"]{
+    input[type="number"], input[type="time"], input[type="password"]{
       width:100%;
       background:var(--input-bg);
       border:1px solid var(--border);
@@ -220,7 +206,6 @@
     .btn.pri{border-color:#1d4ed8; background:rgba(59,130,246,.14);}
     .btn.ghost{background:transparent;}
 
-    /* ★✕/▼アイコンボタン */
     .iconBtn{
       border:1px solid var(--border);
       background:transparent;
@@ -359,7 +344,6 @@
       filter: var(--settings-icon-filter, none);
     }
 
-    /* ★設定ドロワー上部（右上に✕） */
     .drawerHeader{
       display:flex;
       align-items:flex-start;
@@ -403,7 +387,7 @@
       <button class="iconBtn" id="btnDrawerClose" aria-label="設定を閉じる" title="設定を閉じる">✕</button>
     </div>
 
-    <!-- ★統合パネル：status + Export JSON + GitHubリンク（折りたたみ） -->
+    <!-- ★統合パネル：status + Export + APIキー（折りたたみ） -->
     <div class="card">
       <div class="row" style="justify-content:space-between; align-items:flex-start;">
         <div style="min-width:0; flex:1;">
@@ -414,6 +398,22 @@
       </div>
 
       <div class="collapsibleBody" id="sysBody">
+        <div class="hr"></div>
+
+        <div class="small">
+          <b>Google Calendar(ID)方式</b>は公開カレンダー向け。<br>
+          <b>会社カレンダー</b>（一般公開しない）は基本 <b>ICS非公開URL</b> が現実的。<br>
+          ※ID方式を使うならAPIキーが必要（下）。
+        </div>
+
+        <div style="height:10px;"></div>
+
+        <label>Google API Key（ID方式用・必要な人だけ）</label>
+        <input type="password" id="googleApiKey" placeholder="AIza..." />
+        <div class="small" style="margin-top:6px;">
+          空なら ID方式は読み込み失敗する（ICSはOK）。
+        </div>
+
         <div class="hr"></div>
 
         <div class="row" style="justify-content:space-between;">
@@ -452,43 +452,6 @@
         <div id="exportArea" style="display:none; margin-top:10px;">
           <label>config.json</label>
           <textarea id="exportText" spellcheck="false"></textarea>
-        </div>
-
-        <!-- ===== ローカル config.json（任意） ===== -->
-        <div class="hr"></div>
-
-        <div style="font-size:13px;">ローカル config.json</div>
-        <div class="small">GitHubに置かず、PC内の config.json を読み込み（保存して次回も自動適用）</div>
-        <div style="height:8px;"></div>
-
-        <input type="file" id="localConfigFile" accept="application/json" style="display:none;" />
-
-        <div class="row" style="justify-content:space-between; gap:8px;">
-          <button class="btn" id="btnPickLocalConfig">ローカルconfigを選択</button>
-          <button class="btn pri" id="btnLoadLocalConfig" disabled>読み込み</button>
-          <button class="btn bad" id="btnClearLocalConfig">ローカルconfigを消す</button>
-        </div>
-
-        <div style="height:8px;"></div>
-
-        <div class="checks">
-          <label>
-            <input type="checkbox" id="chkPreferLocalConfig">
-            ローカルconfigを優先（ONならGitHub/config.jsonより優先）
-          </label>
-        </div>
-
-        <div class="small" id="localConfigStatus" style="margin-top:6px;">
-          local config: なし
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="small">
-          <b>注意（超重要）</b><br>
-          ・<b>Calendar ID（Google Calendar）</b>は、通常<b>公開カレンダー</b>向けです。<br>
-          ・会社の<b>非公開カレンダー</b>は、APIキーだけでは読めません（OAuth等が必要）。<br>
-          ・<b>非公開URLのICS</b>は「URLを知ってる人は読める」方式なので、扱いは慎重に。
         </div>
       </div>
     </div>
@@ -609,7 +572,7 @@
       </div>
     </div>
 
-    <!-- ★カレンダー追加：ID/ICS 両対応 -->
+    <!-- ★カレンダー追加：ID/ICS 両方 -->
     <div class="card">
       <div class="row" style="justify-content:space-between; align-items:center;">
         <div><div style="font-size:13px;">カレンダー追加</div></div>
@@ -620,25 +583,23 @@
         <div class="hr"></div>
 
         <div class="small">
-          <b>追加方式</b>を選ぶ（<b>ID</b> or <b>ICS</b>）。<br>
-          ・ID: Google CalendarのID（例: <code>xxxxx@group.calendar.google.com</code>）<br>
-          ・ICS: iCalのURL（公開/非公開URL）<br>
-          ※ICSはAPIキー不要だが“プロキシ(Worker)”が必須。<br>
-          ※IDは通常「公開カレンダー」向け（非公開は読めないことが多い）。
+          <b>Google Calendar ID</b>（公開カレンダー） or <b>ICS URL</b>（会社カレンダー向け）を追加。<br>
+          ICSは “プロキシ(Worker)” が必須（CORS回避）。
         </div>
 
         <div style="height:10px;"></div>
 
         <label>追加方式</label>
-        <select id="newSourceType">
-          <option value="ics">ICS（URL）</option>
-          <option value="gcal">Google Calendar（ID）</option>
+        <select id="newType">
+          <option value="auto">自動（入力から判定）</option>
+          <option value="gcal">Google Calendar ID</option>
+          <option value="ics">ICS URL</option>
         </select>
 
         <div style="height:8px;"></div>
 
-        <label id="newIdLabel">ICS URL</label>
-        <input type="text" id="newCalId" placeholder="例: https://calendar.google.com/calendar/ical/.../basic.ics" />
+        <label id="newIdLabel">Calendar ID / ICS URL</label>
+        <input type="text" id="newCalId" placeholder="例: q5...@group.calendar.google.com  または  https://calendar.google.com/calendar/ical/.../basic.ics" />
 
         <div class="inline">
           <div>
@@ -675,12 +636,10 @@
 
 <script>
   // =======================
-  // ICS（iCal）プロキシ（CORS回避）
-  // Cloudflare Workers 等で用意して、そのURLを入れる
-  // 例: https://my-ics-proxy.workers.dev/?url=
+  // ★重要：ICSプロキシ（Worker）が「?url=」方式の前提
+  // 例: https://xxx.workers.dev/?url=<encodeURIComponent(ICS_URL)>
   // =======================
   const ICS_PROXY_BASE = "https://blue-mud-fde0.bonbonbon0105.workers.dev/?url=";
-
 
   const SETTINGS_ICON_URL = "https://raw.githubusercontent.com/daichiandbon/MyCalender/refs/heads/main/setting.svg";
   const CONFIG_URL = "./config.json";
@@ -691,10 +650,6 @@
   const LS_SYSOPEN_KEY     = "mycalendar.sys.open";
   const LS_NAVVIEWOPEN_KEY = "mycalendar.navview.open";
   const LS_THEMEOPEN_KEY   = "mycalendar.theme.open";
-
-  // ローカル config
-  const LS_LOCALCONFIG_KEY = "mycalendar.localconfig.v1";
-  const LS_LOCALCONFIG_USE = "mycalendar.localconfig.use";
 
   const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
@@ -781,6 +736,10 @@
     out.weekdayLang = (out.weekdayLang === "en") ? "en" : "ja";
     return out;
   }
+  function normalizeGoogleApiKey(k){
+    const s = String(k || "").trim();
+    return s;
+  }
 
   function mergeTheme(base, over){
     const out = clone(base);
@@ -792,58 +751,6 @@
     if (isObj(over)) Object.assign(out, over);
     return normalizeView(out);
   }
-  function mergeNav(base, over){
-    const out = clone(base);
-    if (isObj(over)) Object.assign(out, over);
-    return normalizeNav(out);
-  }
-
-  // calendars: 仕様（ID/ICS 両対応）
-  // calendars は object で、キーは自由（表示上のIDとして使う）
-  // 値の例:
-  //  - ICS:  { type:"ics",  url:"https://.../basic.ics", ... }
-  //  - GCAL: { type:"gcal", id:"xxxx@group.calendar.google.com", ... }
-  // 後方互換:
-  //  - キーが http(s):// なら ICS とみなす（url=key）
-  //  - それ以外なら GCAL とみなす（id=key）
-  function normalizeCalendarEntry(key, v){
-    const cfg = isObj(v) ? v : {};
-    const typeRaw = (cfg.type || "").toString().toLowerCase().trim();
-
-    const keyLooksIcs = /^https?:\/\//i.test((key||"").trim());
-    const fallbackType = keyLooksIcs ? "ics" : "gcal";
-
-    const type = (typeRaw === "ics" || typeRaw === "gcal") ? typeRaw : fallbackType;
-
-    const out = Object.assign({}, cfg);
-
-    out.type = type;
-
-    if (type === "ics") {
-      out.url = (cfg.url && /^https?:\/\//i.test(cfg.url)) ? cfg.url.trim() : (keyLooksIcs ? key.trim() : (cfg.url||"").trim());
-    } else {
-      out.id = (cfg.id ? cfg.id.trim() : key.trim());
-    }
-
-    // default flags
-    if (out.visible === undefined) out.visible = true;
-    if (out.showTitle === undefined) out.showTitle = true;
-    if (out.showTime === undefined) out.showTime = true;
-    if (out.label === undefined) out.label = "予定あり";
-    if (out.color === undefined) out.color = "#2563eb";
-
-    return out;
-  }
-
-  function normalizeCalendarsObject(obj){
-    const out = {};
-    if (!isObj(obj)) return out;
-    for (const [k, v] of Object.entries(obj)) {
-      out[k] = normalizeCalendarEntry(k, v);
-    }
-    return out;
-  }
-
   function mergeCalendars(base, over){
     const out = clone(base);
     if (!isObj(over)) return out;
@@ -853,6 +760,16 @@
       out[id] = Object.assign({}, out[id] || {}, v);
     }
     return out;
+  }
+  function mergeNav(base, over){
+    const out = clone(base);
+    if (isObj(over)) Object.assign(out, over);
+    return normalizeNav(out);
+  }
+  function mergeGoogleApiKey(base, over){
+    const b = normalizeGoogleApiKey(base);
+    const o = normalizeGoogleApiKey(over);
+    return o || b;
   }
 
   function applyThemeToRoot(theme) {
@@ -907,37 +824,44 @@
     root.setProperty("--settings-border", settingsBorder);
   }
 
-  // ====== ID/ICS 両対応 EventSources ======
-  // - ICS: icalendar plugin + proxy（CORS回避）
-  // - ID : google-calendar plugin（要APIキー / 公開カレンダー向け）
-  function makeEventSources(calendarsEffective, googleApiKey) {
-    const arr = [];
-    for (const [entryKey, cRaw] of Object.entries(calendarsEffective || {})) {
-      const c = normalizeCalendarEntry(entryKey, cRaw);
-      if (!c.visible) continue;
+  // =======================
+  // ★ID/ICS 自動判定
+  // - key が http(s):// なら ICS
+  // - それ以外は Google Calendar ID
+  // =======================
+  function looksLikeIcsKey(key){
+    return /^https?:\/\//i.test(String(key||"").trim());
+  }
 
-      if (c.type === "ics") {
-        const url = (c.url || "").trim();
-        if (!/^https?:\/\//i.test(url)) continue;
-        arr.push({
-          id: entryKey,
-          url: ICS_PROXY_BASE + encodeURIComponent(url),
+  function makeEventSources(calendarsEffective, googleApiKey) {
+    const sources = [];
+
+    for (const [key, c] of Object.entries(calendarsEffective || {})) {
+      if (!c || c.visible === false) continue;
+
+      if (looksLikeIcsKey(key)) {
+        const icsUrl = String(key).trim();
+        sources.push({
+          id: key,
+          url: ICS_PROXY_BASE + encodeURIComponent(icsUrl),
           format: "ics",
           color: c.color || undefined
         });
       } else {
-        // gcal
-        const id = (c.id || "").trim();
-        if (!id) continue;
-
-        arr.push({
-          id: entryKey,
-          googleCalendarId: id,
+        const calId = String(key).trim();
+        sources.push({
+          id: key,
+          googleCalendarId: calId,
           color: c.color || undefined
         });
       }
     }
-    return arr;
+
+    // ID方式なのにAPIキー無しだと確実に死ぬので、分かりやすく警告用フラグを返す
+    const hasGcal = sources.some(s => "googleCalendarId" in s);
+    const gcalOk = !!String(googleApiKey||"").trim();
+
+    return { sources, hasGcal, gcalOk };
   }
 
   function formatHm(d){
@@ -961,40 +885,27 @@
   }
 
   // state
-  // baseConfig に googleApiKey を追加（任意）
-  let baseConfig = {
-    googleApiKey: "",
-    theme: clone(PAGE_DEFAULT_THEME),
-    view: clone(PAGE_DEFAULT_VIEW),
-    nav: clone(PAGE_DEFAULT_NAV),
-    calendars: {}
-  };
-  let overrides  = { theme: {}, view: {}, nav: {}, calendars: {} };
-  let effective  = {
-    googleApiKey: "",
-    theme: clone(PAGE_DEFAULT_THEME),
-    view: clone(PAGE_DEFAULT_VIEW),
-    nav: clone(PAGE_DEFAULT_NAV),
-    calendars: {}
-  };
-
+  let baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {}, googleApiKey: "" };
+  let overrides  = { theme: {}, view: {}, nav: {}, calendars: {}, googleApiKey: "" };
+  let effective  = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {}, googleApiKey: "" };
   let calendar = null;
   let resizeBound = false;
 
   function loadOverridesFromLS() {
     try {
       const raw = localStorage.getItem(LS_OVERRIDE_KEY);
-      if (!raw) return { theme: {}, view: {}, nav: {}, calendars: {} };
+      if (!raw) return { theme: {}, view: {}, nav: {}, calendars: {}, googleApiKey: "" };
       const obj = JSON.parse(raw);
-      if (!isObj(obj)) return { theme: {}, view: {}, nav: {}, calendars: {} };
+      if (!isObj(obj)) return { theme: {}, view: {}, nav: {}, calendars: {}, googleApiKey: "" };
       return {
         theme: isObj(obj.theme) ? obj.theme : {},
         view: isObj(obj.view) ? obj.view : {},
         nav: isObj(obj.nav) ? obj.nav : {},
-        calendars: isObj(obj.calendars) ? obj.calendars : {}
+        calendars: isObj(obj.calendars) ? obj.calendars : {},
+        googleApiKey: normalizeGoogleApiKey(obj.googleApiKey || "")
       };
     } catch {
-      return { theme: {}, view: {}, nav: {}, calendars: {} };
+      return { theme: {}, view: {}, nav: {}, calendars: {}, googleApiKey: "" };
     }
   }
 
@@ -1003,88 +914,41 @@
     const hasView  = isObj(overrides.view) && Object.keys(overrides.view).length > 0;
     const hasNav   = isObj(overrides.nav) && Object.keys(overrides.nav).length > 0;
     const hasCals  = isObj(overrides.calendars) && Object.keys(overrides.calendars).length > 0;
-    if (!hasTheme && !hasView && !hasNav && !hasCals) {
+    const hasKey   = !!String(overrides.googleApiKey||"").trim();
+
+    if (!hasTheme && !hasView && !hasNav && !hasCals && !hasKey) {
       localStorage.removeItem(LS_OVERRIDE_KEY);
       return;
     }
+
     localStorage.setItem(LS_OVERRIDE_KEY, JSON.stringify(overrides));
   }
 
   function recomputeEffective() {
-    effective.googleApiKey = (baseConfig.googleApiKey || "").trim();
     effective.theme = mergeTheme(baseConfig.theme || PAGE_DEFAULT_THEME, overrides.theme);
     effective.view  = mergeView(baseConfig.view || PAGE_DEFAULT_VIEW, overrides.view);
     effective.nav   = mergeNav(baseConfig.nav || PAGE_DEFAULT_NAV, overrides.nav);
-
-    const baseCals = normalizeCalendarsObject(baseConfig.calendars || {});
-    const merged = mergeCalendars(baseCals, overrides.calendars);
-    effective.calendars = normalizeCalendarsObject(merged);
-  }
-
-  // ===== ローカル config helpers =====
-  function getLocalConfigFromLS(){
-    try{
-      const raw = localStorage.getItem(LS_LOCALCONFIG_KEY);
-      if(!raw) return null;
-      const obj = JSON.parse(raw);
-      if(!isObj(obj)) return null;
-      return obj;
-    }catch{
-      return null;
-    }
-  }
-  function setLocalConfigToLS(obj){
-    localStorage.setItem(LS_LOCALCONFIG_KEY, JSON.stringify(obj));
-  }
-  function clearLocalConfigLS(){
-    localStorage.removeItem(LS_LOCALCONFIG_KEY);
-  }
-  function isPreferLocalConfig(){
-    return localStorage.getItem(LS_LOCALCONFIG_USE) === "1";
-  }
-  function setPreferLocalConfig(v){
-    localStorage.setItem(LS_LOCALCONFIG_USE, v ? "1" : "0");
-  }
-
-  function applyConfigObjectToBase(data, labelForStatus){
-    baseConfig = {
-      googleApiKey: (data.googleApiKey || data.google_api_key || "").toString().trim(),
-      theme: normalizeTheme(data.theme || {}),
-      view:  normalizeView(data.view || {}),
-      nav:   normalizeNav(data.nav || {}),
-      calendars: isObj(data.calendars) ? data.calendars : {}
-    };
-    $("statusLine").textContent = `status: ${labelForStatus}`;
+    effective.calendars = mergeCalendars(baseConfig.calendars || {}, overrides.calendars);
+    effective.googleApiKey = mergeGoogleApiKey(baseConfig.googleApiKey || "", overrides.googleApiKey || "");
   }
 
   async function loadBaseConfigFromJson() {
-    const local = getLocalConfigFromLS();
-    if (isPreferLocalConfig() && local) {
-      applyConfigObjectToBase(local, "ローカル config.json 適用中");
-      return true;
-    }
-
     try {
       const res = await fetch(CONFIG_URL, { cache: "no-store" });
       if (!res.ok) throw new Error(`config.json fetch failed: ${res.status}`);
       const data = await res.json();
-      applyConfigObjectToBase(data, "config.json 読み込みOK");
+      baseConfig = {
+        theme: normalizeTheme(data.theme || {}),
+        view: normalizeView(data.view || {}),
+        nav: normalizeNav(data.nav || {}),
+        calendars: isObj(data.calendars) ? data.calendars : {},
+        googleApiKey: normalizeGoogleApiKey(data.googleApiKey || "")
+      };
+      $("statusLine").textContent = "status: config.json 読み込みOK";
       return true;
     } catch (e) {
       console.warn(e);
-
-      if (local) {
-        applyConfigObjectToBase(local, "config.json 取得失敗 → ローカル config.json を使用");
-        return true;
-      }
-
-      baseConfig = {
-        googleApiKey: "",
-        theme: clone(PAGE_DEFAULT_THEME),
-        view: clone(PAGE_DEFAULT_VIEW),
-        nav: clone(PAGE_DEFAULT_NAV),
-        calendars: {}
-      };
+      baseConfig = { theme: clone(PAGE_DEFAULT_THEME), view: clone(PAGE_DEFAULT_VIEW), nav: clone(PAGE_DEFAULT_NAV), calendars: {}, googleApiKey: "" };
       $("statusLine").textContent = "status: config.json なし（ページ標準で起動）";
       return false;
     }
@@ -1149,23 +1013,22 @@
     }
 
     const locale = (effective.nav.weekdayLang === "ja") ? "ja" : "en";
+    const { sources, hasGcal, gcalOk } = makeEventSources(effective.calendars, effective.googleApiKey);
 
-    const hasGcal = Object.values(effective.calendars || {}).some(c => normalizeCalendarEntry("", c).type === "gcal");
-    const googleApiKey = (effective.googleApiKey || "").trim();
+    // ステータス補足
+    const baseStatus = $("statusLine").textContent.split(" / ")[0];
+    const parts = [baseStatus];
 
-    // gcal があるのに apiKey が無い場合は警告（動かない）
-    if (hasGcal && !googleApiKey) {
-      const base = $("statusLine").textContent.split(" / ")[0];
-      $("statusLine").textContent = base + " / ★Google Calendar(ID)あり でも googleApiKey が無い";
-    }
+    if (hasGcal && !gcalOk) parts.push("★Google API Key未設定（ID方式は失敗する）");
+    if (ICS_PROXY_BASE.includes("YOUR-WORKER")) parts.push("★ICS_PROXY_BASE未設定");
+
+    // 初期化直後は statusLine がまだ変動するので、ここで上書きしない
+    // → initAll() でまとめて出す
 
     calendar = new FullCalendar.Calendar(el, {
       firstDay: 1,
       initialView: effective.nav.viewMode,
       locale,
-
-      // Google Calendar plugin 用（無ければ無視される）
-      googleCalendarApiKey: googleApiKey || undefined,
 
       headerToolbar: {
         left: "",
@@ -1179,6 +1042,9 @@
         }
       },
 
+      // ★Google Calendar ID 方式のAPIキー
+      googleCalendarApiKey: effective.googleApiKey || "",
+
       nowIndicator: true,
       height: "100%",
       expandRows: true,
@@ -1186,10 +1052,10 @@
       slotMinTime: effective.view.slotMin,
       slotMaxTime: effective.view.slotMax,
 
-      eventSources: makeEventSources(effective.calendars, googleApiKey),
+      eventSources: sources,
 
       eventDidMount: (info) => {
-        const srcId = info.event.source?.id; // = entryKey
+        const srcId = info.event.source?.id; // = calendars key
         const cfg = effective.calendars?.[srcId];
         if (!cfg) return;
 
@@ -1229,7 +1095,7 @@
         info.jsEvent.preventDefault();
         info.jsEvent.stopPropagation();
 
-        const srcId = info.event.source?.id; // = entryKey
+        const srcId = info.event.source?.id; // = calendars key
         const cfg = effective.calendars?.[srcId] || {};
 
         const titleText = (cfg.showTitle === false)
@@ -1264,18 +1130,26 @@
       },
 
       eventSourceFailure: async (err) => {
-        console.error("Event fetch failed:", err);
+        console.error("EventSource failed:", err);
+
+        // FullCalendarのエラー構造はソースでバラつくので、可能な範囲で拾う
         try {
           const st = err?.response?.status;
           const u = err?.response?.url;
-          $("statusLine").textContent = `status: 取得失敗（${st || "?"}）`;
-          console.log("status:", st);
-          console.log("url:", u);
-          if (err?.response?.text) {
-            const t = await err.response.text();
-            console.log("body:", t);
+          if (st || u) {
+            console.log("status:", st);
+            console.log("url:", u);
+            if (err?.response?.text) {
+              const t = await err.response.text();
+              console.log("body:", t);
+            }
+            $("statusLine").textContent = `status: 取得失敗（${st || "?"}）`;
+          } else {
+            $("statusLine").textContent = `status: 取得失敗（詳細はConsole）`;
           }
-        } catch {}
+        } catch {
+          $("statusLine").textContent = `status: 取得失敗（詳細はConsole）`;
+        }
       }
     });
 
@@ -1308,6 +1182,10 @@
     $("weekdayLang").value = effective.nav.weekdayLang;
   }
 
+  function syncSysUI(){
+    $("googleApiKey").value = effective.googleApiKey || "";
+  }
+
   function renderCalendarList() {
     const list = $("calList");
     list.innerHTML = "";
@@ -1321,9 +1199,7 @@
       return;
     }
 
-    for (const [key, cfgEffRaw] of entries) {
-      const cfgEff = normalizeCalendarEntry(key, cfgEffRaw);
-
+    for (const [id, cfgEff] of entries) {
       const item = document.createElement("div");
       item.className = "item";
 
@@ -1335,10 +1211,7 @@
 
       const idEl = document.createElement("div");
       idEl.className = "id";
-
-      const kind = (cfgEff.type === "ics") ? "ICS" : "ID";
-      const mainId = (cfgEff.type === "ics") ? (cfgEff.url || "") : (cfgEff.id || "");
-      idEl.textContent = `[${kind}] ${key} → ${mainId}`;
+      idEl.textContent = id + (looksLikeIcsKey(id) ? "  (ICS)" : "  (ID)");
       left.appendChild(idEl);
 
       const right = document.createElement("div");
@@ -1362,22 +1235,23 @@
       const checks = document.createElement("div");
       checks.className = "checks";
 
-      function setOverrideField(k, value) {
-        overrides.calendars[key] = Object.assign({}, overrides.calendars[key] || {}, { [k]: value });
+      function setOverrideField(key, value) {
+        overrides.calendars[id] = Object.assign({}, overrides.calendars[id] || {}, { [key]: value });
         saveOverridesToLS();
         rebuildCalendar();
         syncThemeUIFromEffective();
         syncViewUIFromEffective();
         syncNavUI();
+        syncSysUI();
         renderCalendarList();
       }
 
-      function addCheck(text, k) {
+      function addCheck(text, key) {
         const lab = document.createElement("label");
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        cb.checked = (cfgEff[k] !== false);
-        cb.addEventListener("change", () => setOverrideField(k, cb.checked));
+        cb.checked = (cfgEff[key] !== false);
+        cb.addEventListener("change", () => setOverrideField(key, cb.checked));
         lab.appendChild(cb);
         lab.appendChild(document.createTextNode(text));
         checks.appendChild(lab);
@@ -1408,12 +1282,13 @@
       color.addEventListener("input", () => setOverrideField("color", color.value));
 
       del.addEventListener("click", () => {
-        overrides.calendars[key] = null;
+        overrides.calendars[id] = null;
         saveOverridesToLS();
         rebuildCalendar();
         syncThemeUIFromEffective();
         syncViewUIFromEffective();
         syncNavUI();
+        syncSysUI();
         renderCalendarList();
       });
 
@@ -1432,13 +1307,9 @@
 
   function buildExportObject() {
     recomputeEffective();
-    return {
-      googleApiKey: effective.googleApiKey || "",
-      theme: effective.theme,
-      view: effective.view,
-      nav: effective.nav,
-      calendars: effective.calendars
-    };
+    const out = { theme: effective.theme, view: effective.view, nav: effective.nav, calendars: effective.calendars };
+    if (String(effective.googleApiKey||"").trim()) out.googleApiKey = String(effective.googleApiKey).trim();
+    return out;
   }
 
   function setExportText() {
@@ -1454,6 +1325,7 @@
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
     syncNavUI();
+    syncSysUI();
     renderCalendarList();
   }
 
@@ -1464,6 +1336,7 @@
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
     syncNavUI();
+    syncSysUI();
     renderCalendarList();
   }
 
@@ -1474,16 +1347,20 @@
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
     syncNavUI();
+    syncSysUI();
     renderCalendarList();
   }
 
-  // ===== ローカル config UI =====
-  function refreshLocalConfigUI(){
-    const hasLocal = !!localStorage.getItem(LS_LOCALCONFIG_KEY);
-    $("localConfigStatus").textContent = hasLocal ? "local config: 保存あり" : "local config: なし";
-    $("chkPreferLocalConfig").checked = isPreferLocalConfig();
+  function setGoogleApiKeyOverride(value){
+    overrides.googleApiKey = normalizeGoogleApiKey(value);
+    saveOverridesToLS();
+    rebuildCalendar();
+    syncThemeUIFromEffective();
+    syncViewUIFromEffective();
+    syncNavUI();
+    syncSysUI();
+    renderCalendarList();
   }
-  let pendingLocalFile = null;
 
   async function initAll() {
     overrides = loadOverridesFromLS();
@@ -1492,53 +1369,39 @@
     syncThemeUIFromEffective();
     syncViewUIFromEffective();
     syncNavUI();
+    syncSysUI();
     renderCalendarList();
 
     setDrawer(false);
-    // 起動時はすべて「閉じ」
     setSysOpen(false);
     setNavViewOpen(false);
     setThemeOpen(false);
     setAddOpen(false);
 
-    refreshLocalConfigUI();
+    // status整形（起動時まとめ）
+    recomputeEffective();
+    const { hasGcal, gcalOk } = makeEventSources(effective.calendars, effective.googleApiKey);
+    const parts = [];
+    parts.push($("statusLine").textContent.split(" / ")[0]);
+    parts.push(localStorage.getItem(LS_OVERRIDE_KEY) ? "local差分あり" : "local差分なし");
 
-    const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
-    $("statusLine").textContent += hasLS ? " / local差分あり" : " / local差分なし";
-    if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
-      $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
-    }
+    if (hasGcal && !gcalOk) parts.push("★Google API Key未設定（ID方式は失敗）");
+    if (!String(ICS_PROXY_BASE||"").includes("?url=")) parts.push("★ICS_PROXY_BASEが ?url= じゃない");
+    $("statusLine").textContent = "status: " + parts.join(" / ").replace(/^status:\s*/,"");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     $("btnDrawerClose").addEventListener("click", () => setDrawer(false));
     $("overlay").addEventListener("click", () => setDrawer(false));
 
-    $("btnToggleSys").addEventListener("click", () => {
-      const open = !$("sysBody").classList.contains("on");
-      setSysOpen(open);
-    });
-
-    $("btnToggleNavView").addEventListener("click", () => {
-      const open = !$("navViewBody").classList.contains("on");
-      setNavViewOpen(open);
-    });
-
-    $("btnToggleTheme").addEventListener("click", () => {
-      const open = !$("themeBody").classList.contains("on");
-      setThemeOpen(open);
-    });
-
-    $("btnToggleAddIcon").addEventListener("click", () => {
-      const open = !$("addBody").classList.contains("on");
-      setAddOpen(open);
-    });
+    $("btnToggleSys").addEventListener("click", () => setSysOpen(!$("sysBody").classList.contains("on")));
+    $("btnToggleNavView").addEventListener("click", () => setNavViewOpen(!$("navViewBody").classList.contains("on")));
+    $("btnToggleTheme").addEventListener("click", () => setThemeOpen(!$("themeBody").classList.contains("on")));
+    $("btnToggleAddIcon").addEventListener("click", () => setAddOpen(!$("addBody").classList.contains("on")));
 
     $("eventOverlay").addEventListener("click", closeEventModal);
     $("eventCloseBtn").addEventListener("click", closeEventModal);
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeEventModal();
-    });
+    window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeEventModal(); });
 
     $("btnGoPrev").addEventListener("click", () => calendar && calendar.prev());
     $("btnGoNext").addEventListener("click", () => calendar && calendar.next());
@@ -1557,6 +1420,7 @@
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
     });
 
@@ -1578,6 +1442,7 @@
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
     });
 
@@ -1600,38 +1465,36 @@
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
     });
 
-    // ===== 追加UI: 方式でラベル/placeholder を変える =====
-    function syncAddUiByType(){
-      const t = $("newSourceType").value;
-      if (t === "gcal") {
-        $("newIdLabel").textContent = "Calendar ID";
-        $("newCalId").placeholder = "例: q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com";
-      } else {
-        $("newIdLabel").textContent = "ICS URL";
-        $("newCalId").placeholder = "例: https://calendar.google.com/calendar/ical/.../basic.ics";
-      }
-    }
-    $("newSourceType").addEventListener("change", syncAddUiByType);
-    syncAddUiByType();
+    // Google API Key
+    $("googleApiKey").addEventListener("change", (e) => setGoogleApiKeyOverride(e.target.value));
 
-    // ===== 追加（ID/ICS） =====
+    // 追加UIのラベル切替（見た目だけ）
+    $("newType").addEventListener("change", () => {
+      const t = $("newType").value;
+      $("newIdLabel").textContent = (t === "ics") ? "ICS URL" : (t === "gcal") ? "Google Calendar ID" : "Calendar ID / ICS URL";
+      $("newCalId").placeholder = (t === "ics")
+        ? "例: https://calendar.google.com/calendar/ical/.../basic.ics"
+        : (t === "gcal")
+          ? "例: q5...@group.calendar.google.com / xxxx@gmail.com"
+          : "例: q5...@group.calendar.google.com  または  https://calendar.google.com/calendar/ical/.../basic.ics";
+    });
+
     $("btnAdd").addEventListener("click", () => {
-      const kind = $("newSourceType").value; // "ics" | "gcal"
       const raw = normId($("newCalId").value);
-      if (!raw) return alert("ID / URL が空。");
+      if (!raw) return alert("入力が空。");
 
-      if (kind === "ics" && !/^https?:\/\//i.test(raw)) return alert("ICS は http(s) から始めて。");
-      if (kind === "gcal" && /^https?:\/\//i.test(raw)) return alert("Calendar ID にURLを入れてるっぽい。方式をICSにして。");
+      const type = $("newType").value;
+      const isIcs = (type === "ics") ? true : (type === "gcal") ? false : looksLikeIcsKey(raw);
 
-      // キーは「入力値そのもの」を使う（衝突回避のため）
-      // 仕様: calendarsのキーは自由 / 値に type と url/id を入れる
+      if (isIcs) {
+        if (!/^https?:\/\//i.test(raw)) return alert("ICS URL は http(s) から始めて。");
+      }
+
       overrides.calendars[raw] = {
-        type: kind,
-        url: (kind === "ics") ? raw : undefined,
-        id:  (kind === "gcal") ? raw : undefined,
         visible: $("newVisible").checked,
         showTitle: $("newShowTitle").checked,
         showTime: $("newShowTime").checked,
@@ -1645,6 +1508,7 @@
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
     });
 
@@ -1654,32 +1518,23 @@
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
 
-      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
-      const base = $("statusLine").textContent.split(" / ")[0];
-      $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
-      if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
-        $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
-      }
+      initAll(); // statusも含めて整える
     });
 
     $("btnClearOverrides").addEventListener("click", () => {
       if (!confirm("ローカル差分を消して、config.json基準に戻す？")) return;
-      overrides = { theme: {}, view: {}, nav: {}, calendars: {} };
+      overrides = { theme: {}, view: {}, nav: {}, calendars: {}, googleApiKey: "" };
       localStorage.removeItem(LS_OVERRIDE_KEY);
       rebuildCalendar();
       syncThemeUIFromEffective();
       syncViewUIFromEffective();
       syncNavUI();
+      syncSysUI();
       renderCalendarList();
-
-      const base = $("statusLine").textContent.split(" / ")[0];
-      const hasLS = !!localStorage.getItem(LS_OVERRIDE_KEY);
-      $("statusLine").textContent = base + (hasLS ? " / local差分あり" : " / local差分なし");
-      if (ICS_PROXY_BASE.includes("YOUR-WORKER")) {
-        $("statusLine").textContent += " / ★ICS_PROXY_BASE未設定";
-      }
+      initAll();
     });
 
     $("btnExportShow").addEventListener("click", () => {
@@ -1713,88 +1568,6 @@
       a.remove();
 
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    });
-
-    // ===== ローカル config.json UI =====
-    $("btnPickLocalConfig").addEventListener("click", () => {
-      $("localConfigFile").value = "";
-      $("localConfigFile").click();
-    });
-
-    $("localConfigFile").addEventListener("change", (e) => {
-      const f = e.target.files && e.target.files[0];
-      pendingLocalFile = f || null;
-      $("btnLoadLocalConfig").disabled = !pendingLocalFile;
-    });
-
-    $("btnLoadLocalConfig").addEventListener("click", async () => {
-      if(!pendingLocalFile) return;
-
-      try{
-        const text = await pendingLocalFile.text();
-        const obj = JSON.parse(text);
-        if(!isObj(obj)) throw new Error("JSON is not object");
-
-        // 必須キーは無くてもOK（normalize側で吸収）
-        const data = {
-          googleApiKey: (obj.googleApiKey || obj.google_api_key || "").toString().trim(),
-          theme: obj.theme || {},
-          view: obj.view || {},
-          nav: obj.nav || {},
-          calendars: obj.calendars || {}
-        };
-
-        setLocalConfigToLS(data);
-
-        // 読み込んだらローカル優先をON
-        setPreferLocalConfig(true);
-        $("chkPreferLocalConfig").checked = true;
-
-        refreshLocalConfigUI();
-
-        await loadBaseConfigFromJson();
-        rebuildCalendar();
-        syncThemeUIFromEffective();
-        syncViewUIFromEffective();
-        syncNavUI();
-        renderCalendarList();
-
-        pendingLocalFile = null;
-        $("btnLoadLocalConfig").disabled = true;
-
-        alert("ローカル config.json を読み込みました");
-      }catch(err){
-        console.error(err);
-        alert("ローカル config.json の読み込みに失敗。JSON形式を確認して。");
-      }
-    });
-
-    $("btnClearLocalConfig").addEventListener("click", async () => {
-      if(!confirm("ローカル config.json を削除して、GitHub/config.json（またはページ標準）に戻す？")) return;
-
-      clearLocalConfigLS();
-      setPreferLocalConfig(false);
-
-      refreshLocalConfigUI();
-
-      await loadBaseConfigFromJson();
-      rebuildCalendar();
-      syncThemeUIFromEffective();
-      syncViewUIFromEffective();
-      syncNavUI();
-      renderCalendarList();
-    });
-
-    $("chkPreferLocalConfig").addEventListener("change", async (e) => {
-      setPreferLocalConfig(!!e.target.checked);
-      refreshLocalConfigUI();
-
-      await loadBaseConfigFromJson();
-      rebuildCalendar();
-      syncThemeUIFromEffective();
-      syncViewUIFromEffective();
-      syncNavUI();
-      renderCalendarList();
     });
 
     initAll();
