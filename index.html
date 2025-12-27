@@ -642,7 +642,9 @@
   // ★ICSプロキシ（Worker）が「?url=」方式の前提
   // 例: https://xxx.workers.dev/?url=<encodeURIComponent(ICS_URL)>
   // =======================
-  const ICS_PROXY_BASE = "https://blue-mud-fde0.bonbonbon0105.workers.dev/?url=";
+  const CONFIG_TOKEN = "9f2a3d6e-6c1a-4d5f-9c91-82d9c4b7a9aa";
+  const ICS_PROXY_BASE = "https://blue-mud-fde0.bonbonbon0105.workers.dev/?token=" + encodeURIComponent(CONFIG_TOKEN) + "&url=";
+
 
   // =======================
   // ★config専用Worker（ここをあなたのWorkerに）
@@ -666,7 +668,7 @@
   const LS_SYSOPEN_KEY     = "mycalendar.sys.open";
   const LS_NAVVIEWOPEN_KEY = "mycalendar.navview.open";
   const LS_THEMEOPEN_KEY   = "mycalendar.theme.open";
-  const LS_CONFIG_TOKEN    = "mycalendar.configWorker.token.v1";
+  const LS_CONFIG_TOKEN    = "9f2a3d6e-6c1a-4d5f-9c91-82d9c4b7a9aa";
 
   const PAGE_DEFAULT_NAV = { viewMode:"timeGridWeek", weekdayLang:"ja" };
   const PAGE_DEFAULT_VIEW = { slotMin: "06:00:00", slotMax: "24:00:00" };
