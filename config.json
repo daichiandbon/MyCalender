@@ -28,19 +28,20 @@
       "color": "#8724eb",
       "label": "予定あり"
     },
-    "sugimoto@shirogumi.co.jp": {
-      "visible": true,
-      "showTitle": true,
-      "showTime": true,
-      "color": "#2563eb",
-      "label": "予定あり"
-    },
     "q5iptcp4jeta8irgvoqtf8n5ng@group.calendar.google.com": {
       "visible": true,
       "showTitle": true,
       "showTime": true,
       "color": "#687287",
       "label": "予定あり"
+    },
+    "https://calendar.google.com/calendar/ical/sugimoto%40shirogumi.co.jp/private-a138425d377ced366ccb535a46728979/basic.ics": {
+      "visible": true,
+      "showTitle": true,
+      "showTime": true,
+      "color": "#57408c",
+      "label": "予定あり"
     }
-  }
+  },
+  "googleApiKey": "AIzaSyDZdH26P0tSEBRNnEa4rE9As7rcd924QJ4"
 }
